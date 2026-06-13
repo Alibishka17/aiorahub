@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TrueHire — AI-найм и визовое сопровождение</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 min-h-screen flex flex-col">
+
+<nav class="bg-white border-b border-slate-200">
+    <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+            <div class="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center text-white font-bold">T</div>
+            <span class="text-xl font-bold text-slate-900">True<span class="text-indigo-600">Hire</span></span>
+        </div>
+        <span class="text-sm text-slate-400">Прототип · Demo для инвесторов</span>
+    </div>
+</nav>
+
+<main class="flex-1">
+    <section class="max-w-6xl mx-auto px-6 pt-20 pb-16 text-center">
+        <span class="inline-block bg-indigo-100 text-indigo-700 text-xs font-semibold px-3 py-1 rounded-full mb-6">
+            SaaS-платформа международного найма
+        </span>
+        <h1 class="text-5xl font-extrabold text-slate-900 leading-tight mb-6">
+            Найм иностранных специалистов<br>
+            <span class="text-indigo-600">без HR-рутины и визового хаоса</span>
+        </h1>
+        <p class="max-w-2xl mx-auto text-lg text-slate-600 mb-10">
+            TrueHire автоматизирует путь от отклика до рабочей визы: AI-агент проводит
+            видеоинтервью, оценивает уровень языка и адекватность кандидата, а визовый модуль
+            ведёт документы до одобрения в посольстве Германии.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <a href="/login?role=EMPLOYER"
+               class="px-8 py-4 rounded-xl bg-indigo-600 text-white font-semibold text-lg hover:bg-indigo-700 transition shadow-lg shadow-indigo-200">
+                Войти как Работодатель
+            </a>
+            <a href="/login?role=CANDIDATE"
+               class="px-8 py-4 rounded-xl bg-white text-indigo-700 font-semibold text-lg border-2 border-indigo-200 hover:border-indigo-400 transition">
+                Войти как Соискатель
+            </a>
+        </div>
+    </section>
+
+    <section class="max-w-6xl mx-auto px-6 pb-20">
+        <div class="grid md:grid-cols-3 gap-6">
+            <div class="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm">
+                <div class="w-12 h-12 rounded-xl bg-indigo-100 flex items-center justify-center text-2xl mb-4">🤖</div>
+                <h3 class="font-bold text-slate-900 text-lg mb-2">AI-скрининг</h3>
+                <p class="text-slate-600 text-sm">
+                    AI-агент проводит интервью в Google Meet, оценивает уровень немецкого
+                    и формирует отчёт о soft skills для работодателя.
+                </p>
+            </div>
+            <div class="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm">
+                <div class="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center text-2xl mb-4">📋</div>
+                <h3 class="font-bold text-slate-900 text-lg mb-2">Job Offer в один клик</h3>
+                <p class="text-slate-600 text-sm">
+                    Работодатель видит только проверенных кандидатов с отчётом AI
+                    и выдаёт оффер прямо из кабинета.
+                </p>
+            </div>
+            <div class="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm">
+                <div class="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center text-2xl mb-4">🛂</div>
+                <h3 class="font-bold text-slate-900 text-lg mb-2">Визовое сопровождение</h3>
+                <p class="text-slate-600 text-sm">
+                    Платформа собирает документы, проверяет их и ведёт кейс
+                    до одобрения визы посольством Германии.
+                </p>
+            </div>
+        </div>
+    </section>
+</main>
+
+<footer class="border-t border-slate-200 py-6 text-center text-sm text-slate-400">
+    TrueHire © 2026 · Прототип. Все данные — демонстрационные.
+</footer>
+
+</body>
+</html>
