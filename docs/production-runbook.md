@@ -84,6 +84,8 @@ sudo nginx -t
 sudo systemctl reload nginx
 ```
 
+The HTTPS virtual host must keep `client_max_body_size 11m`, matching the application's 10 MB CV limit plus multipart overhead. Requests rejected by Nginx with `413` are redirected to `/candidate/documents?uploadTooLarge=true`, where the candidate sees the localized size error instead of a blank response.
+
 TLS certificates are managed by Certbot and stored under `/etc/letsencrypt/live/aiorahub.com`. Renewal must remain enabled through `certbot.timer`.
 
 ## Validation
@@ -111,6 +113,7 @@ Expected public behavior:
 - Flyway reports schema version 4 or later and the service log has no migration, callback or template errors.
 - `https://www.aiorahub.com` redirects to the apex domain.
 - `/h2-console` is not exposed through Nginx.
+- a multipart request larger than 1 MB reaches the application; CV files above 10 MB show the localized validation error.
 - `Accept-Language: ru`, `kk` or `en` selects the corresponding interface until the user stores a manual choice in `AIORAHUB_LANG`.
 
 ## Rollback

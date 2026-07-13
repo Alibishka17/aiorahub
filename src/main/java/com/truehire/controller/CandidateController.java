@@ -83,6 +83,7 @@ public class CandidateController {
                             @RequestParam(defaultValue = "") String city,
                             @RequestParam(defaultValue = "") String country,
                             @RequestParam(required = false) Long salary,
+                            @RequestParam(defaultValue = "false") boolean uploadTooLarge,
                             HttpServletRequest request,
                             HttpSession session,
                             Locale locale,
@@ -148,6 +149,9 @@ public class CandidateController {
         model.addAttribute("filterSalary", salary);
         model.addAttribute("completedInterviews", completedInterviews);
         model.addAttribute("activeApplications", activeApplications);
+        if (uploadTooLarge) {
+            model.addAttribute("cvError", messages.getMessage("error.cv_size", null, locale));
+        }
         return "candidate";
     }
 

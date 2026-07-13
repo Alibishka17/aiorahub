@@ -21,6 +21,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import jakarta.servlet.http.Cookie;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 
@@ -129,6 +132,26 @@ class AccountWorkflowTest {
         User candidate = userRepository.findByEmailIgnoreCase("cv-owner@example.com").orElseThrow();
         assertThat(candidate.getCvFileName()).isEqualTo("resume.pdf");
         assertThat(candidate.getCvStorageKey()).endsWith(".pdf");
+    }
+
+    @Test
+    void oversizedUploadRedirectRendersAVisibleCvError() throws Exception {
+        User candidate = userRepository.save(new User(
+                "large-cv-" + UUID.randomUUID() + "@example.com", "not-used", "Large CV", Role.CANDIDATE));
+        MockHttpSession session = new MockHttpSession();
+        session.setAttribute("userId", candidate.getId());
+
+        mockMvc.perform(get("/candidate/documents")
+                        .param("uploadTooLarge", "true")
+                        .session(session)
+                        .locale(Locale.ENGLISH))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString(
+                        "CV must not exceed 10 MB.")));
+
+        assertThat(Files.readString(Path.of("deploy/nginx/aiorahub.conf")))
+                .contains("client_max_body_size 11m;")
+                .contains("error_page 413 =303 /candidate/documents?uploadTooLarge=true;");
     }
 
     @Test
