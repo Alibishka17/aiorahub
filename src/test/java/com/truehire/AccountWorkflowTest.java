@@ -151,7 +151,8 @@ class AccountWorkflowTest {
 
         assertThat(Files.readString(Path.of("deploy/nginx/aiorahub.conf")))
                 .contains("client_max_body_size 11m;")
-                .contains("error_page 413 =303 /candidate/documents?uploadTooLarge=true;");
+                .contains("error_page 413 = @cv_too_large;")
+                .contains("return 303 /candidate/documents?uploadTooLarge=true;");
     }
 
     @Test
