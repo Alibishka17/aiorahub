@@ -49,7 +49,7 @@ JAR, database and uploads backups must run before a production rebuild. Database
 
 ## PostgreSQL and service identity
 
-The production environment file must contain `SPRING_PROFILES_ACTIVE=prod`, `DATABASE_URL`, `DATABASE_USERNAME`, and `DATABASE_PASSWORD`; use `deploy/systemd/aiorahub.env.example` as the key list. `UPLOAD_DIR` is optional and defaults to `/var/lib/aiorahub/uploads`. Never commit real passwords.
+The production environment file must contain `SPRING_PROFILES_ACTIVE=prod`, database credentials, `ADMIN_USERNAME`, a BCrypt-only `ADMIN_PASSWORD_HASH`, `HRME_BASE_URL`, and `HRME_SERVICE_TOKEN`; use `deploy/systemd/aiorahub.env.example` as the key list. `UPLOAD_DIR` is optional and defaults to `/var/lib/aiorahub/uploads`. The same random service token must be installed in HRme as `AIORAHUB_SERVICE_TOKEN`. Never commit plaintext passwords or real tokens.
 
 Before the first release with CV uploads:
 
@@ -88,6 +88,8 @@ curl -fsS http://127.0.0.1:8080/ >/dev/null
 sudo -u postgres psql -d aiorahub -Atc 'select count(*) from users;'
 curl -fsSI https://aiorahub.com/
 curl -fsSI https://aiorahub.com/vacancies
+curl -fsSI https://aiorahub.com/admin/login
+curl -sS -o /dev/null -w '%{http_code}\n' https://aiorahub.com/api/integrations/hrme/catalog
 curl -fsSI https://www.aiorahub.com/
 journalctl -u aiorahub -n 100 --no-pager
 ```
@@ -97,6 +99,9 @@ Expected public behavior:
 - HTTP redirects to `https://aiorahub.com`.
 - `https://aiorahub.com` returns `200`.
 - `https://aiorahub.com/vacancies` returns `200` and lists only published vacancies.
+- `/admin/login` returns `200`; protected admin actions require its session and CSRF token.
+- integration endpoints return `401` without the shared Bearer token.
+- Flyway reports schema version 4 or later and the service log has no migration, callback or template errors.
 - `https://www.aiorahub.com` redirects to the apex domain.
 - `/h2-console` is not exposed through Nginx.
 - `Accept-Language: ru`, `kk` or `en` selects the corresponding interface until the user stores a manual choice in `AIORAHUB_LANG`.

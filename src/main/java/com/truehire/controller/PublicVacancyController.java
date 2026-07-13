@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.server.ResponseStatusException;
+import com.truehire.service.InterviewLaunchService;
 
 import java.util.Locale;
 import java.util.UUID;
@@ -33,15 +34,18 @@ public class PublicVacancyController {
     private final JobApplicationRepository applicationRepository;
     private final UserRepository userRepository;
     private final MessageSource messages;
+    private final InterviewLaunchService interviewLaunchService;
 
     public PublicVacancyController(JobVacancyRepository vacancyRepository,
                                    JobApplicationRepository applicationRepository,
                                    UserRepository userRepository,
-                                   MessageSource messages) {
+                                   MessageSource messages,
+                                   InterviewLaunchService interviewLaunchService) {
         this.vacancyRepository = vacancyRepository;
         this.applicationRepository = applicationRepository;
         this.userRepository = userRepository;
         this.messages = messages;
+        this.interviewLaunchService = interviewLaunchService;
     }
 
     @GetMapping("/vacancies")
@@ -132,7 +136,11 @@ public class PublicVacancyController {
                 whatsappEnabled,
                 token);
         applicationRepository.save(application);
-        return "redirect:/guest/application/" + token;
+        try {
+            return "redirect:" + interviewLaunchService.launch(application, vacancy, normalizedEmail);
+        } catch (IllegalStateException ex) {
+            return "redirect:/guest/application/" + token;
+        }
     }
 
     @GetMapping("/guest/application/{token}")
@@ -141,6 +149,18 @@ public class PublicVacancyController {
         model.addAttribute("guestApplication", application);
         model.addAttribute("vacancy", vacancyRepository.findById(application.getVacancyId()).orElse(null));
         return "guest-complete";
+    }
+
+    @PostMapping("/guest/application/{token}/interview")
+    public String startGuestInterview(@PathVariable String token) {
+        JobApplication application = guestApplication(token);
+        JobVacancy vacancy = publishedVacancy(application.getVacancyId());
+        try {
+            return "redirect:" + interviewLaunchService.launch(
+                    application, vacancy, application.getGuestEmail());
+        } catch (IllegalStateException ex) {
+            return "redirect:/guest/application/" + token;
+        }
     }
 
     private JobVacancy publishedVacancy(Long id) {

@@ -1649,6 +1649,124 @@ a {
         grid-template-columns: 1fr;
     }
 }
+
+.admin-main {
+    max-width: 1500px;
+}
+
+.admin-kpis {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.admin-kpis article {
+    min-height: 118px;
+    display: flex;
+    justify-content: space-between;
+    flex-direction: column;
+    padding: 20px;
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: 7px;
+}
+
+.admin-kpis span {
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.admin-kpis strong {
+    font-size: 30px;
+}
+
+.admin-section {
+    margin-top: 38px;
+    scroll-margin-top: 20px;
+}
+
+.admin-section .app-heading {
+    margin-bottom: 16px;
+}
+
+.admin-section .app-heading h2 {
+    margin: 0;
+    font-size: 24px;
+}
+
+.admin-two-column {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+    align-items: start;
+}
+
+.admin-two-column--vacancies {
+    grid-template-columns: minmax(300px, 0.7fr) minmax(0, 1.3fr);
+}
+
+.admin-table-wrap {
+    max-height: 420px;
+    overflow: auto;
+}
+
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+}
+
+.admin-table th,
+.admin-table td {
+    padding: 11px 16px;
+    border-bottom: 1px solid var(--line);
+    text-align: left;
+}
+
+.admin-table th {
+    color: var(--muted);
+    background: var(--soft);
+    font-size: 10px;
+    text-transform: uppercase;
+}
+
+.admin-form-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 150px;
+    gap: 12px;
+}
+
+@media (max-width: 980px) {
+    .admin-kpis {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .admin-two-column,
+    .admin-two-column--vacancies {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 620px) {
+    .admin-kpis {
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+
+    .admin-kpis article {
+        min-height: 96px;
+        padding: 14px;
+    }
+
+    .admin-kpis strong {
+        font-size: 24px;
+    }
+
+    .admin-form-row {
+        grid-template-columns: 1fr;
+    }
+}
 .language-switcher {
     display: inline-flex;
     flex: 0 0 auto;

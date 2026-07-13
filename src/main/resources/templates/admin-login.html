@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en" th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="#{admin.login.title}">Admin - AI Ora Hub</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/aiorahub.css">
+</head>
+<body class="aiora-app auth-page">
+<main class="auth-shell">
+    <a href="/" class="brand" th:attr="aria-label=#{brand.home}">
+        <span class="brand-name"><span class="brand-ai">AI</span><span>Ora</span><span class="brand-hub">Hub</span></span>
+    </a>
+    <div th:replace="~{fragments/language-switcher :: switcher}"></div>
+    <section class="auth-panel">
+        <div class="auth-heading">
+            <span class="auth-kicker" th:text="#{admin.login.kicker}">Administration</span>
+            <h1 th:text="#{admin.login.heading}">Admin</h1>
+            <p th:text="#{admin.login.copy}">Authorized access only.</p>
+        </div>
+        <div th:if="${error}" class="form-alert" th:text="${error}">Error</div>
+        <form th:action="@{/admin/login}" method="post" class="app-form">
+            <div><label class="app-label" for="admin-username" th:text="#{admin.login.username}">Username</label><input id="admin-username" class="app-input" name="username" th:value="${username}" autocomplete="username" required></div>
+            <div><label class="app-label" for="admin-password" th:text="#{form.password}">Password</label><input id="admin-password" class="app-input" type="password" name="password" autocomplete="current-password" required></div>
+            <button type="submit" class="button button--primary button--full" th:text="#{admin.login.submit}">Sign in</button>
+        </form>
+    </section>
+</main>
+</body>
+</html>

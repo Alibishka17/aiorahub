@@ -53,10 +53,17 @@
                     <button type="submit" class="button button--primary button--full" th:text="#{vacancy.apply}">Apply</button>
                 </form>
             </div>
-            <div th:if="${candidateApplication != null && (candidateApplication.status.name() == 'APPLIED' || candidateApplication.status.name() == 'INTERVIEW_PENDING')}">
+            <div th:if="${candidateApplication != null && candidateApplication.status.name() == 'APPLIED'}">
                 <span class="status" th:text="#{status.applied}">Application sent</span>
                 <p th:text="#{vacancy.application_received}">Application received.</p>
-                <a href="/candidate" class="inline-link" th:text="#{vacancy.open_applications}">Open applications</a>
+                <form th:action="@{'/candidate/applications/' + ${candidateApplication.id} + '/interview'}" method="post">
+                    <button type="submit" class="button button--primary button--full" th:text="#{interview.start}">Start AI interview</button>
+                </form>
+            </div>
+            <div th:if="${candidateApplication != null && candidateApplication.status.name() == 'INTERVIEW_PENDING'}">
+                <span class="status" th:text="#{status.interview_pending}">Interview started</span>
+                <p th:text="#{vacancy.application_received}">Application received.</p>
+                <a th:if="${candidateApplication.externalInterviewUrl != null}" th:href="${candidateApplication.externalInterviewUrl}" class="button button--primary button--full" th:text="#{interview.continue}">Continue AI interview</a>
             </div>
             <div th:if="${candidateApplication != null && candidateApplication.status.name() == 'INTERVIEW_COMPLETED'}" class="vacancy-progress-note">
                 <span class="status" th:text="#{status.interview_completed}">Interview completed</span>

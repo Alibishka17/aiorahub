@@ -31,6 +31,9 @@ public class JobVacancy {
 
     private LocalDateTime createdAt = LocalDateTime.now();
 
+    @Column(nullable = false, length = 100)
+    private String interviewTemplateId = "hrme-warsaw";
+
     public JobVacancy() {
     }
 
@@ -68,4 +71,7 @@ public class JobVacancy {
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public String getInterviewTemplateId() { return interviewTemplateId; }
+    public void setInterviewTemplateId(String interviewTemplateId) { this.interviewTemplateId = interviewTemplateId; }
 }

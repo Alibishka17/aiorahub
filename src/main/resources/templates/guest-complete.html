@@ -20,6 +20,10 @@
         <h1 th:text="#{guest.complete.heading}">Application sent</h1>
         <p><span th:text="#{guest.complete.received}">The employer received your details for</span> <strong th:text="${vacancy != null ? vacancy.title : ''}">Vacancy</strong>.</p>
         <p><span th:text="#{guest.complete.contact}">The recruiter will contact you at</span> <strong th:text="${guestApplication.guestEmail}">email@example.com</strong>. <span th:text="#{guest.complete.interview}">AI interview will be available later.</span></p>
+        <form th:if="${guestApplication.status.name() == 'APPLIED'}" th:action="@{'/guest/application/' + ${guestApplication.guestAccessToken} + '/interview'}" method="post">
+            <button type="submit" class="button button--primary button--full" th:text="#{interview.start}">Start AI interview</button>
+        </form>
+        <a th:if="${guestApplication.externalInterviewUrl != null && guestApplication.status.name() == 'INTERVIEW_PENDING'}" th:href="${guestApplication.externalInterviewUrl}" class="button button--primary button--full" th:text="#{interview.continue}">Continue AI interview</a>
         <a href="/vacancies" class="button button--secondary button--full" th:text="#{guest.complete.back}">Back to vacancies</a>
     </section>
 </main>

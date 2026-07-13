@@ -3,6 +3,7 @@ package com.truehire.controller;
 import com.truehire.model.*;
 import com.truehire.repository.*;
 import com.truehire.service.CvStorageService;
+import com.truehire.service.InterviewLaunchService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.core.io.Resource;
 import org.springframework.http.ContentDisposition;
@@ -28,19 +29,22 @@ public class CandidateController {
     private final InterviewResultRepository resultRepository;
     private final VisaDocumentRepository documentRepository;
     private final CvStorageService cvStorageService;
+    private final InterviewLaunchService interviewLaunchService;
 
     public CandidateController(UserRepository userRepository,
                                JobVacancyRepository vacancyRepository,
                                JobApplicationRepository applicationRepository,
                                InterviewResultRepository resultRepository,
                                VisaDocumentRepository documentRepository,
-                               CvStorageService cvStorageService) {
+                               CvStorageService cvStorageService,
+                               InterviewLaunchService interviewLaunchService) {
         this.userRepository = userRepository;
         this.vacancyRepository = vacancyRepository;
         this.applicationRepository = applicationRepository;
         this.resultRepository = resultRepository;
         this.documentRepository = documentRepository;
         this.cvStorageService = cvStorageService;
+        this.interviewLaunchService = interviewLaunchService;
     }
 
     private User currentCandidate(HttpSession session) {
@@ -141,10 +145,29 @@ public class CandidateController {
             if (vacancy.getStatus() != VacancyStatus.PUBLISHED) {
                 return "redirect:/vacancies";
             }
-            applicationRepository.save(new JobApplication(
+            application = applicationRepository.save(new JobApplication(
                     vacancyId, candidate.getId(), ApplicationStatus.APPLIED));
         }
-        return "redirect:/candidate#history";
+        try {
+            return "redirect:" + interviewLaunchService.launch(application, vacancy, candidate.getEmail());
+        } catch (IllegalStateException ex) {
+            return "redirect:/candidate#history";
+        }
+    }
+
+    @PostMapping("/applications/{appId}/interview")
+    public String startInterview(@PathVariable Long appId, HttpSession session) {
+        User candidate = currentCandidate(session);
+        if (candidate == null) return "redirect:/login?role=CANDIDATE";
+        JobApplication application = ownApplication(appId, candidate);
+        if (application == null) return "redirect:/candidate";
+        JobVacancy vacancy = vacancyRepository.findById(application.getVacancyId()).orElse(null);
+        if (vacancy == null) return "redirect:/candidate";
+        try {
+            return "redirect:" + interviewLaunchService.launch(application, vacancy, candidate.getEmail());
+        } catch (IllegalStateException ex) {
+            return "redirect:/candidate#history";
+        }
     }
 
     // ---------- Визовое сопровождение ----------

@@ -5,11 +5,14 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 import java.util.Optional;
+import com.truehire.model.ApplicationStatus;
 
 public interface JobApplicationRepository extends JpaRepository<JobApplication, Long> {
     List<JobApplication> findByCandidateId(Long candidateId);
     List<JobApplication> findByVacancyIdIn(List<Long> vacancyIds);
+    List<JobApplication> findByVacancyId(Long vacancyId);
     Optional<JobApplication> findByVacancyIdAndCandidateId(Long vacancyId, Long candidateId);
     Optional<JobApplication> findByGuestAccessToken(String guestAccessToken);
     Optional<JobApplication> findByVacancyIdAndGuestEmailIgnoreCase(Long vacancyId, String guestEmail);
+    long countByStatus(ApplicationStatus status);
 }

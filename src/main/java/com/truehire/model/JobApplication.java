@@ -43,6 +43,17 @@ public class JobApplication {
 
     private LocalDateTime confirmedAt;
 
+    private Long externalInterviewId;
+
+    private String externalInterviewToken;
+
+    @Column(length = 500)
+    private String externalInterviewUrl;
+
+    private LocalDateTime interviewStartedAt;
+
+    private LocalDateTime interviewCompletedAt;
+
     public JobApplication() {
     }
 
@@ -123,4 +134,19 @@ public class JobApplication {
 
     public LocalDateTime getConfirmedAt() { return confirmedAt; }
     public void setConfirmedAt(LocalDateTime confirmedAt) { this.confirmedAt = confirmedAt; }
+
+    public Long getExternalInterviewId() { return externalInterviewId; }
+    public void setExternalInterviewId(Long externalInterviewId) { this.externalInterviewId = externalInterviewId; }
+
+    public String getExternalInterviewToken() { return externalInterviewToken; }
+    public void setExternalInterviewToken(String externalInterviewToken) { this.externalInterviewToken = externalInterviewToken; }
+
+    public String getExternalInterviewUrl() { return externalInterviewUrl; }
+    public void setExternalInterviewUrl(String externalInterviewUrl) { this.externalInterviewUrl = externalInterviewUrl; }
+
+    public LocalDateTime getInterviewStartedAt() { return interviewStartedAt; }
+    public void setInterviewStartedAt(LocalDateTime interviewStartedAt) { this.interviewStartedAt = interviewStartedAt; }
+
+    public LocalDateTime getInterviewCompletedAt() { return interviewCompletedAt; }
+    public void setInterviewCompletedAt(LocalDateTime interviewCompletedAt) { this.interviewCompletedAt = interviewCompletedAt; }
 }

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en" th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="#{admin.title}">Admin - AI Ora Hub</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/aiorahub.css">
+</head>
+<body class="aiora-app">
+<header class="app-topbar">
+    <a href="/" class="brand" th:attr="aria-label=#{brand.home}"><span class="brand-name"><span class="brand-ai">AI</span><span>Ora</span><span class="brand-hub">Hub</span></span></a>
+    <div th:replace="~{fragments/language-switcher :: switcher}"></div>
+    <div class="app-user"><strong>Admin</strong><form th:action="@{/admin/logout}" method="post"><button type="submit" th:text="#{nav.logout}">Sign out</button></form></div>
+</header>
+<div class="app-layout">
+    <aside class="app-sidebar">
+        <nav th:attr="aria-label=#{admin.nav}">
+            <a href="#overview" class="active" th:text="#{admin.overview}">Overview</a>
+            <a href="#analytics" th:text="#{admin.analytics}">Analytics</a>
+            <a href="#vacancies" th:text="#{nav.vacancies}">Vacancies</a>
+        </nav>
+    </aside>
+    <main class="app-main admin-main">
+        <div class="app-heading" id="overview"><div><h1 th:text="#{admin.heading}">Administration</h1><p th:text="#{admin.copy}">Platform operations and recruiting activity.</p></div></div>
+
+        <section class="admin-kpis" th:attr="aria-label=#{admin.metrics}">
+            <article><span th:text="#{admin.views_today}">Views today</span><strong th:text="${viewsToday}">0</strong></article>
+            <article><span th:text="#{admin.unique_today}">Unique today</span><strong th:text="${uniqueToday}">0</strong></article>
+            <article><span th:text="#{admin.online}">Online now</span><strong th:text="${onlineNow}">0</strong></article>
+            <article><span th:text="#{admin.views_month}">Views this month</span><strong th:text="${viewsMonth}">0</strong></article>
+            <article><span th:text="#{admin.candidates}">Candidates</span><strong th:text="${candidates}">0</strong></article>
+            <article><span th:text="#{admin.employers}">Employers</span><strong th:text="${employers}">0</strong></article>
+            <article><span th:text="#{admin.applications}">Applications</span><strong th:text="${applications}">0</strong></article>
+            <article><span th:text="#{admin.completed}">Completed interviews</span><strong th:text="${completedInterviews}">0</strong></article>
+        </section>
+
+        <section id="analytics" class="admin-section">
+            <div class="app-heading"><div><h2 th:text="#{admin.analytics}">Analytics</h2><p th:text="#{admin.analytics_copy}">First-party statistics without storing raw IP addresses.</p></div></div>
+            <div class="admin-two-column">
+                <section class="app-panel">
+                    <div class="app-panel__header"><h2 th:text="#{admin.popular}">Popular pages</h2></div>
+                    <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th th:text="#{admin.path}">Path</th><th th:text="#{admin.views}">Views</th></tr></thead><tbody><tr th:each="row : ${popularPaths}"><td th:text="${row[0]}">/</td><td th:text="${row[1]}">0</td></tr></tbody></table></div>
+                </section>
+                <section class="app-panel">
+                    <div class="app-panel__header"><h2 th:text="#{admin.recent}">Recent activity</h2></div>
+                    <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th th:text="#{admin.path}">Path</th><th th:text="#{admin.time}">Time</th></tr></thead><tbody><tr th:each="visit : ${recentVisits}"><td th:text="${visit.path}">/</td><td th:text="${visit.visitedAt}">Time</td></tr></tbody></table></div>
+                </section>
+            </div>
+        </section>
+
+        <section id="vacancies" class="admin-section">
+            <div class="app-heading"><div><h2 th:text="#{admin.vacancies}">Vacancy management</h2><p th:text="#{admin.vacancies_copy}">Create and update every vacancy and its HRme template.</p></div></div>
+            <div class="admin-two-column admin-two-column--vacancies">
+                <section class="app-panel">
+                    <div class="app-panel__header"><h2 th:text="#{admin.new_vacancy}">New vacancy</h2></div>
+                    <div class="app-panel__body">
+                        <p th:if="${employerUsers.isEmpty()}" class="form-alert" th:text="#{admin.no_employers}">Create an employer account first.</p>
+                        <form th:if="${!employerUsers.isEmpty()}" th:action="@{/admin/vacancies}" method="post" class="app-form">
+                            <div><label class="app-label" for="admin-employer" th:text="#{admin.owner}">Employer</label><select id="admin-employer" name="employerId" class="app-input" required><option th:each="employer : ${employerUsers}" th:value="${employer.id}" th:text="${employer.name + ' — ' + employer.email}">Employer</option></select></div>
+                            <div><label class="app-label" for="admin-title" th:text="#{employer.title_label}">Title</label><input id="admin-title" name="title" class="app-input" required maxlength="255"></div>
+                            <div><label class="app-label" for="admin-description" th:text="#{employer.description}">Description</label><textarea id="admin-description" name="description" class="app-input" rows="4" required maxlength="3000"></textarea></div>
+                            <div><label class="app-label" for="admin-conditions" th:text="#{vacancy.conditions}">Conditions</label><textarea id="admin-conditions" name="conditions" class="app-input" rows="3" required maxlength="2000"></textarea></div>
+                            <div><label class="app-label" for="admin-requirements" th:text="#{vacancy.requirements}">Requirements</label><textarea id="admin-requirements" name="candidateRequirements" class="app-input" rows="3" required maxlength="2000"></textarea></div>
+                            <div><label class="app-label" for="admin-template" th:text="#{admin.template}">HRme template ID</label><input id="admin-template" name="interviewTemplateId" value="hrme-warsaw" class="app-input" required pattern="[a-z0-9-]+"></div>
+                            <button class="button button--primary" type="submit" th:text="#{employer.publish_vacancy}">Publish vacancy</button>
+                        </form>
+                    </div>
+                </section>
+                <section class="app-panel">
+                    <div class="app-panel__header"><h2 th:text="#{admin.all_vacancies}">All vacancies</h2><span class="status" th:text="${vacancies.size()}">0</span></div>
+                    <div class="record-list">
+                        <p th:if="${vacancies.isEmpty()}" class="record" th:text="#{employer.no_vacancies}">No vacancies.</p>
+                        <article th:each="vacancy : ${vacancies}" class="record">
+                            <form th:action="@{'/admin/vacancies/' + ${vacancy.id}}" method="post" class="app-form">
+                                <div class="record__head"><h3 th:text="${'#' + vacancy.id}">#1</h3><span class="status" th:text="${vacancy.status}">PUBLISHED</span></div>
+                                <input name="title" class="app-input" th:value="${vacancy.title}" required maxlength="255">
+                                <textarea name="description" class="app-input" rows="3" th:text="${vacancy.description}" required maxlength="3000"></textarea>
+                                <textarea name="conditions" class="app-input" rows="2" th:text="${vacancy.conditions}" required maxlength="2000"></textarea>
+                                <textarea name="candidateRequirements" class="app-input" rows="2" th:text="${vacancy.candidateRequirements}" required maxlength="2000"></textarea>
+                                <div class="admin-form-row"><div><label class="app-label" th:text="#{admin.template}">Template</label><input name="interviewTemplateId" class="app-input" th:value="${vacancy.interviewTemplateId}" required pattern="[a-z0-9-]+"></div><div><label class="app-label" th:text="#{admin.status}">Status</label><select name="status" class="app-input"><option th:each="value : ${T(com.truehire.model.VacancyStatus).values()}" th:value="${value}" th:text="${value}" th:selected="${value == vacancy.status}">PUBLISHED</option></select></div></div>
+                                <button type="submit" class="button button--dark" th:text="#{admin.save}">Save changes</button>
+                            </form>
+                        </article>
+                    </div>
+                </section>
+            </div>
+        </section>
+    </main>
+</div>
+</body>
+</html>

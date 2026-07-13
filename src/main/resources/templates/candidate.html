@@ -86,9 +86,13 @@
                     </div>
                     <div th:if="${result != null}" class="candidate-result">
                         <strong th:text="#{candidate.interview_history}">AI interview history</strong>
-                        <p><span th:text="${result.aiLanguageScore}">Assessment</span> · <span th:text="${result.passed ? #messages.msg('status.interview_completed') : #messages.msg('candidate.retry')}">Status</span></p>
+                        <p th:text="#{status.interview_completed}">Interview completed</p>
                         <details class="report-details"><summary th:text="#{candidate.view_result}">View result</summary><p th:text="${result.summary != null ? result.summary : result.aiSoftSkillsComment}">Result</p></details>
                     </div>
+                    <form th:if="${app.status.name() == 'APPLIED'}" th:action="@{'/candidate/applications/' + ${app.id} + '/interview'}" method="post">
+                        <button type="submit" class="button button--primary candidate-history__action" th:text="#{interview.start}">Start AI interview</button>
+                    </form>
+                    <a th:if="${app.status.name() == 'INTERVIEW_PENDING' && app.externalInterviewUrl != null}" th:href="${app.externalInterviewUrl}" class="button button--primary candidate-history__action" th:text="#{interview.continue}">Continue AI interview</a>
                     <div th:if="${app.status.name() == 'OFFER_GRANTED' || app.status.name() == 'VISA_PROCESSING'}" class="candidate-letter">
                         <span class="auth-kicker" th:text="#{candidate.confirmed_kicker}">Confirmed</span>
                         <h4 th:text="#{candidate.confirmed_heading}">Candidacy confirmed</h4>
