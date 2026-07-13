@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Отклик отправлен — AI Ora Hub</title>
+    <title th:text="#{guest.complete.title}">Application sent - AI Ora Hub</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -11,15 +11,16 @@
 </head>
 <body class="aiora-app auth-page">
 <main class="auth-shell">
-    <a href="/" class="brand" aria-label="AI Ora Hub — главная">
+    <a href="/" class="brand" th:attr="aria-label=#{brand.home}">
         <span class="brand-name"><span class="brand-ai">AI</span><span>Ora</span><span class="brand-hub">Hub</span></span>
     </a>
+    <div th:replace="~{fragments/language-switcher :: switcher}"></div>
     <section class="auth-panel completion-panel">
-        <span class="completion-mark">Отклик отправлен</span>
-        <h1>Отклик отправлен</h1>
-        <p>Работодатель получил ваши данные по вакансии <strong th:text="${vacancy != null ? vacancy.title : ''}">Вакансия</strong>.</p>
-        <p>Аккаунт не создан. Рекрутер свяжется с вами по адресу <strong th:text="${guestApplication.guestEmail}">email@example.com</strong>. AI-интервью будет доступно после подключения интервью-системы.</p>
-        <a href="/vacancies" class="button button--secondary button--full">Вернуться к вакансиям</a>
+        <span class="completion-mark" th:text="#{guest.complete.mark}">Application sent</span>
+        <h1 th:text="#{guest.complete.heading}">Application sent</h1>
+        <p><span th:text="#{guest.complete.received}">The employer received your details for</span> <strong th:text="${vacancy != null ? vacancy.title : ''}">Vacancy</strong>.</p>
+        <p><span th:text="#{guest.complete.contact}">The recruiter will contact you at</span> <strong th:text="${guestApplication.guestEmail}">email@example.com</strong>. <span th:text="#{guest.complete.interview}">AI interview will be available later.</span></p>
+        <a href="/vacancies" class="button button--secondary button--full" th:text="#{guest.complete.back}">Back to vacancies</a>
     </section>
 </main>
 </body>

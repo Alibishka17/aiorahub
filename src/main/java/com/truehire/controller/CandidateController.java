@@ -188,9 +188,9 @@ public class CandidateController {
         }
 
         // Файлы визового процесса подключаются отдельным защищённым хранилищем; здесь фиксируются метаданные.
-        saveDocument(app.getId(), "Паспорт", passport);
-        saveDocument(app.getId(), "Диплом", diploma);
-        saveDocument(app.getId(), "Контракт", contract);
+        saveDocument(app.getId(), "PASSPORT", passport);
+        saveDocument(app.getId(), "DIPLOMA", diploma);
+        saveDocument(app.getId(), "CONTRACT", contract);
 
         app.setStatus(ApplicationStatus.VISA_PROCESSING);
         applicationRepository.save(app);

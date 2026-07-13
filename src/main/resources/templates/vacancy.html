@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="${vacancy.title + ' — AI Ora Hub'}">Вакансия — AI Ora Hub</title>
+    <title th:text="${vacancy.title + ' — AI Ora Hub'}">Vacancy - AI Ora Hub</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -12,64 +12,65 @@
 <body class="aiora-page vacancies-page">
 <header class="site-header">
     <div class="site-container site-header__inner">
-        <a href="/" class="brand" aria-label="AI Ora Hub — главная">
+        <a href="/" class="brand" th:attr="aria-label=#{brand.home}">
             <span class="brand-name"><span class="brand-ai">AI</span><span>Ora</span><span class="brand-hub">Hub</span></span>
         </a>
-        <a href="/vacancies" class="header-back">К списку вакансий</a>
-        <a th:if="${currentUser == null}" href="/login" class="button button--primary">Войти в кабинет</a>
-        <a th:if="${currentUser != null && currentUser.role.name() == 'CANDIDATE'}" href="/candidate" class="button button--primary">Мой кабинет</a>
-        <a th:if="${currentUser != null && currentUser.role.name() == 'EMPLOYER'}" href="/employer" class="button button--primary">Кабинет работодателя</a>
+        <a href="/vacancies" class="header-back" th:text="#{nav.back_vacancies}">Back to vacancies</a>
+        <div th:replace="~{fragments/language-switcher :: switcher}"></div>
+        <a th:if="${currentUser == null}" href="/login" class="button button--primary" th:text="#{nav.login}">Sign in</a>
+        <a th:if="${currentUser != null && currentUser.role.name() == 'CANDIDATE'}" href="/candidate" class="button button--primary" th:text="#{nav.my_account}">My account</a>
+        <a th:if="${currentUser != null && currentUser.role.name() == 'EMPLOYER'}" href="/employer" class="button button--primary" th:text="#{nav.employer_account}">Employer account</a>
     </div>
 </header>
 <main class="vacancy-detail">
     <div class="site-container vacancy-detail__grid">
         <article>
-            <span class="vacancy-state">Открыта для откликов</span>
+            <span class="vacancy-state" th:text="#{vacancies.open}">Open</span>
             <h1 th:text="${vacancy.title}">Название вакансии</h1>
             <section class="vacancy-section">
-                <h2>О работе</h2>
+                <h2 th:text="#{vacancy.about}">About the role</h2>
                 <p th:text="${vacancy.description}">Описание</p>
             </section>
             <section class="vacancy-section">
-                <h2>Условия</h2>
+                <h2 th:text="#{vacancy.conditions}">Conditions</h2>
                 <p th:text="${vacancy.conditions}">Условия</p>
             </section>
             <section class="vacancy-section">
-                <h2>Требования</h2>
+                <h2 th:text="#{vacancy.requirements}">Requirements</h2>
                 <p th:text="${vacancy.candidateRequirements}">Требования</p>
             </section>
         </article>
         <aside class="vacancy-apply-panel">
-            <h2>Отклик на вакансию</h2>
+            <h2 th:text="#{vacancy.apply_heading}">Apply</h2>
             <div th:if="${currentUser == null}">
-                <p>Укажите контакты. Личный кабинет создавать не обязательно.</p>
-                <a th:href="@{'/vacancies/' + ${vacancy.id} + '/apply'}" class="button button--primary button--full">Откликнуться</a>
-                <a href="/register?role=CANDIDATE" class="inline-link">Создать кабинет соискателя</a>
+                <p th:text="#{vacancy.guest_copy}">Provide contact details.</p>
+                <a th:href="@{'/vacancies/' + ${vacancy.id} + '/apply'}" class="button button--primary button--full" th:text="#{vacancy.apply}">Apply</a>
+                <a href="/register?role=CANDIDATE" class="inline-link" th:text="#{vacancy.create_candidate}">Create candidate account</a>
             </div>
             <div th:if="${candidate != null && candidateApplication == null}">
-                <p>Ваш профиль уже заполнен. Контакты будут переданы рекрутеру.</p>
+                <p th:text="#{vacancy.profile_ready}">Profile ready.</p>
                 <form th:action="@{'/candidate/apply/' + ${vacancy.id}}" method="post">
-                    <button type="submit" class="button button--primary button--full">Откликнуться</button>
+                    <button type="submit" class="button button--primary button--full" th:text="#{vacancy.apply}">Apply</button>
                 </form>
             </div>
             <div th:if="${candidateApplication != null && (candidateApplication.status.name() == 'APPLIED' || candidateApplication.status.name() == 'INTERVIEW_PENDING')}">
-                <span class="status">Отклик отправлен</span>
-                <p>Рекрутер получил ваши данные. AI-интервью появится здесь после подключения интервью-системы.</p>
-                <a href="/candidate" class="inline-link">Открыть мои отклики</a>
+                <span class="status" th:text="#{status.applied}">Application sent</span>
+                <p th:text="#{vacancy.application_received}">Application received.</p>
+                <a href="/candidate" class="inline-link" th:text="#{vacancy.open_applications}">Open applications</a>
             </div>
             <div th:if="${candidateApplication != null && candidateApplication.status.name() == 'INTERVIEW_COMPLETED'}" class="vacancy-progress-note">
-                <span class="status">Интервью пройдено</span>
-                <p>AI-отчёт передан работодателю. Решение появится в личном кабинете.</p>
-                <a href="/candidate" class="inline-link">Открыть мои отклики</a>
+                <span class="status" th:text="#{status.interview_completed}">Interview completed</span>
+                <p th:text="#{vacancy.report_sent}">Report sent.</p>
+                <a href="/candidate" class="inline-link" th:text="#{vacancy.open_applications}">Open applications</a>
             </div>
             <div th:if="${candidateApplication != null && (candidateApplication.status.name() == 'OFFER_GRANTED' || candidateApplication.status.name() == 'VISA_PROCESSING')}" class="vacancy-progress-note">
-                <span class="status">Кандидат подтверждён</span>
-                <p>Следующий этап доступен в личном кабинете.</p>
-                <a href="/candidate" class="button button--secondary button--full">Открыть кабинет</a>
+                <span class="status" th:text="#{vacancy.candidate_confirmed}">Candidate confirmed</span>
+                <p th:text="#{vacancy.next_stage}">Next stage available.</p>
+                <a href="/candidate" class="button button--secondary button--full" th:text="#{vacancy.open_account}">Open account</a>
             </div>
             <div th:if="${currentUser != null && currentUser.role.name() == 'EMPLOYER'}">
-                <p>Управление этой вакансией и кандидатами находится в кабинете работодателя.</p>
-                <a href="/employer" class="button button--secondary button--full">Открыть кабинет</a>
+                <p th:text="#{vacancy.employer_manage}">Manage in employer account.</p>
+                <a href="/employer" class="button button--secondary button--full" th:text="#{vacancy.open_account}">Open account</a>
             </div>
         </aside>
     </div>

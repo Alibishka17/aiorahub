@@ -3,11 +3,13 @@ package com.truehire;
 import com.truehire.model.JobVacancy;
 import com.truehire.model.ApplicationStatus;
 import com.truehire.model.JobApplication;
+import com.truehire.model.InterviewResult;
 import com.truehire.model.Role;
 import com.truehire.model.User;
 import com.truehire.model.VacancyStatus;
 import com.truehire.repository.JobVacancyRepository;
 import com.truehire.repository.JobApplicationRepository;
+import com.truehire.repository.InterviewResultRepository;
 import com.truehire.repository.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +19,7 @@ import org.springframework.mock.web.MockHttpSession;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import jakarta.servlet.http.Cookie;
 
 import java.util.UUID;
 
@@ -25,6 +28,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.cookie;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -47,6 +51,9 @@ class AccountWorkflowTest {
 
     @Autowired
     private JobApplicationRepository applicationRepository;
+
+    @Autowired
+    private InterviewResultRepository resultRepository;
 
     @Test
     void registersCandidateWithContactPreferencesAndHashedPassword() throws Exception {
@@ -79,7 +86,7 @@ class AccountWorkflowTest {
                         .param("password", "securePass123")
                         .param("role", "CANDIDATE"))
                 .andExpect(status().isOk())
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("международном формате")));
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("international phone format")));
 
         assertThat(userRepository.existsByEmailIgnoreCase("invalid-phone@example.com")).isFalse();
     }
@@ -218,14 +225,14 @@ class AccountWorkflowTest {
 
         mockMvc.perform(get("/guest/application/{token}", application.getGuestAccessToken()))
                 .andExpect(status().isOk())
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("Отклик отправлен")));
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Application sent")));
         assertThat(application.getStatus()).isEqualTo(ApplicationStatus.APPLIED);
 
         mockMvc.perform(get("/employer").session(employerSession))
                 .andExpect(status().isOk())
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("Без регистрации")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Not registered")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("guest-candidate@example.com")))
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("Написать кандидату")));
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Write to candidate")));
     }
 
     @Test
@@ -238,7 +245,7 @@ class AccountWorkflowTest {
                         .param("phone", "87001234567")
                         .param("email", "guest-invalid-phone@example.com"))
                 .andExpect(status().isOk())
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("международном формате")));
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("international phone format")));
 
         assertThat(applicationRepository
                 .findByVacancyIdAndGuestEmailIgnoreCase(vacancy.getId(), "guest-invalid-phone@example.com"))
@@ -261,12 +268,12 @@ class AccountWorkflowTest {
 
         mockMvc.perform(get("/candidate").session(session))
                 .andExpect(status().isOk())
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("Открыть вакансию")));
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Open vacancy")));
 
         mockMvc.perform(get("/vacancies/{id}", vacancy.getId()).session(session))
                 .andExpect(status().isOk())
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("Откликнуться")))
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("Ваш профиль уже заполнен")));
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Apply")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Your profile is complete")));
 
         mockMvc.perform(get("/vacancies/{id}/apply", vacancy.getId()).session(session))
                 .andExpect(status().is3xxRedirection())
@@ -293,7 +300,68 @@ class AccountWorkflowTest {
 
         mockMvc.perform(get("/vacancies/{id}", vacancy.getId()).session(session))
                 .andExpect(status().isOk())
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("Отклик отправлен")));
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Application sent")));
+    }
+
+    @Test
+    void selectsSupportedBrowserLanguageAndPersistsManualChoice() throws Exception {
+        mockMvc.perform(get("/").header("Accept-Language", "ru-RU,ru;q=0.9"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Таланты находят работу")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("<html lang=\"ru\"")));
+
+        mockMvc.perform(get("/").header("Accept-Language", "kk-KZ,kk;q=0.9"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Мамандар жұмыс табады")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("<html lang=\"kk\"")));
+
+        MvcResult languageChange = mockMvc.perform(get("/login?lang=kk").header("Accept-Language", "en-US"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Кабинетке кіру")))
+                .andExpect(cookie().value("AIORAHUB_LANG", "kk"))
+                .andReturn();
+        Cookie languageCookie = languageChange.getResponse().getCookie("AIORAHUB_LANG");
+
+        mockMvc.perform(get("/register").cookie(languageCookie).header("Accept-Language", "en-US"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Жеке кабинет ашу")));
+    }
+
+    @Test
+    void rendersLocalizedCandidateEmployerAndVisaWorkspaces() throws Exception {
+        String suffix = UUID.randomUUID().toString();
+        User employer = userRepository.save(new User(
+                "workspace-employer-" + suffix + "@example.com", "not-used", "Workspace Employer", Role.EMPLOYER));
+        User candidate = userRepository.save(new User(
+                "workspace-candidate-" + suffix + "@example.com", "not-used", "Workspace Candidate", Role.CANDIDATE));
+        JobVacancy vacancy = vacancyRepository.save(new JobVacancy(
+                "Backend Engineer", "Build services", "Remote", "Java experience", employer.getId()));
+        JobApplication application = applicationRepository.save(new JobApplication(
+                vacancy.getId(), candidate.getId(), ApplicationStatus.INTERVIEW_COMPLETED));
+        InterviewResult result = new InterviewResult(application.getId(), "B2", "Clear communication", null, true);
+        result.setSummary("Relevant experience");
+        result.setTranscript("Interview transcript");
+        result.setConclusion("Proceed to next stage");
+        resultRepository.save(result);
+
+        MockHttpSession candidateSession = new MockHttpSession();
+        candidateSession.setAttribute("userId", candidate.getId());
+        mockMvc.perform(get("/candidate").session(candidateSession).header("Accept-Language", "kk-KZ"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Менің өтінімдерім")));
+
+        MockHttpSession employerSession = new MockHttpSession();
+        employerSession.setAttribute("userId", employer.getId());
+        mockMvc.perform(get("/employer").session(employerSession).header("Accept-Language", "en-US"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Open transcript and conclusion")));
+
+        application.setStatus(ApplicationStatus.OFFER_GRANTED);
+        applicationRepository.save(application);
+        mockMvc.perform(get("/candidate/visa/{id}", application.getId())
+                        .session(candidateSession).header("Accept-Language", "ru-RU"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Прогресс получения визы")));
     }
 
     private JobVacancy createPublishedVacancy(String title) {

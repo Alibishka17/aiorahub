@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Вход — AI Ora Hub</title>
+    <title th:text="#{login.title}">Sign in - AI Ora Hub</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -11,27 +11,28 @@
 </head>
 <body class="aiora-app auth-page">
 <main class="auth-shell">
-    <a href="/" class="brand" aria-label="AI Ora Hub — главная">
+    <a href="/" class="brand" th:attr="aria-label=#{brand.home}">
         <span class="brand-name"><span class="brand-ai">AI</span><span>Ora</span><span class="brand-hub">Hub</span></span>
     </a>
+    <div th:replace="~{fragments/language-switcher :: switcher}"></div>
     <section class="auth-panel">
         <div class="auth-heading">
-            <span class="auth-kicker">Личный кабинет</span>
-            <h1>Войти в кабинет</h1>
-            <p>Используйте почту и пароль, указанные при регистрации.</p>
+            <span class="auth-kicker" th:text="#{login.kicker}">Personal account</span>
+            <h1 th:text="#{login.heading}">Sign in</h1>
+            <p th:text="#{login.copy}">Use your registration details.</p>
         </div>
-        <div th:if="${error}" class="form-alert" th:text="${error}">Ошибка</div>
+        <div th:if="${error}" class="form-alert" th:text="${error}">Error</div>
         <form th:action="@{/login}" method="post" class="app-form">
             <fieldset class="role-switch">
-                <legend>Тип кабинета</legend>
-                <label><input type="radio" name="role" value="CANDIDATE" th:checked="${selectedRole.name() == 'CANDIDATE'}"><span>Соискатель</span></label>
-                <label><input type="radio" name="role" value="EMPLOYER" th:checked="${selectedRole.name() == 'EMPLOYER'}"><span>Работодатель</span></label>
+                <legend th:text="#{login.account_type}">Account type</legend>
+                <label><input type="radio" name="role" value="CANDIDATE" th:checked="${selectedRole.name() == 'CANDIDATE'}"><span th:text="#{role.candidate}">Candidate</span></label>
+                <label><input type="radio" name="role" value="EMPLOYER" th:checked="${selectedRole.name() == 'EMPLOYER'}"><span th:text="#{role.employer}">Employer</span></label>
             </fieldset>
-            <div><label class="app-label" for="login-email">Электронная почта</label><input id="login-email" class="app-input" type="email" name="email" th:value="${email}" autocomplete="email" required></div>
-            <div><label class="app-label" for="login-password">Пароль</label><input id="login-password" class="app-input" type="password" name="password" autocomplete="current-password" required></div>
-            <button type="submit" class="button button--primary button--full">Войти</button>
+            <div><label class="app-label" for="login-email" th:text="#{form.email}">Email</label><input id="login-email" class="app-input" type="email" name="email" th:value="${email}" autocomplete="email" required></div>
+            <div><label class="app-label" for="login-password" th:text="#{form.password}">Password</label><input id="login-password" class="app-input" type="password" name="password" autocomplete="current-password" required></div>
+            <button type="submit" class="button button--primary button--full" th:text="#{login.submit}">Sign in</button>
         </form>
-        <p class="auth-foot">Нет аккаунта? <a th:href="@{/register(role=${selectedRole})}">Создать личный кабинет</a></p>
+        <p class="auth-foot"><span th:text="#{login.no_account}">No account?</span> <a th:href="@{/register(role=${selectedRole})}" th:text="#{login.create}">Create account</a></p>
     </section>
 </main>
 </body>

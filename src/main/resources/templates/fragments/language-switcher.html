@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="switcher" class="language-switcher" th:attr="aria-label=#{language.choose}">
+    <a th:href="${languageUrls['ru']}" th:classappend="${#locale.language == 'ru'} ? 'active'" lang="ru">RU</a>
+    <a th:href="${languageUrls['kk']}" th:classappend="${#locale.language == 'kk'} ? 'active'" lang="kk">ҚАЗ</a>
+    <a th:href="${languageUrls['en']}" th:classappend="${#locale.language == 'en'} ? 'active'" lang="en">EN</a>
+</div>
+</body>
+</html>

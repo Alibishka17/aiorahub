@@ -9,6 +9,7 @@ import com.truehire.repository.JobApplicationRepository;
 import com.truehire.repository.JobVacancyRepository;
 import com.truehire.repository.UserRepository;
 import jakarta.servlet.http.HttpSession;
+import org.springframework.context.MessageSource;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -31,13 +32,16 @@ public class PublicVacancyController {
     private final JobVacancyRepository vacancyRepository;
     private final JobApplicationRepository applicationRepository;
     private final UserRepository userRepository;
+    private final MessageSource messages;
 
     public PublicVacancyController(JobVacancyRepository vacancyRepository,
                                    JobApplicationRepository applicationRepository,
-                                   UserRepository userRepository) {
+                                   UserRepository userRepository,
+                                   MessageSource messages) {
         this.vacancyRepository = vacancyRepository;
         this.applicationRepository = applicationRepository;
         this.userRepository = userRepository;
+        this.messages = messages;
     }
 
     @GetMapping("/vacancies")
@@ -93,16 +97,17 @@ public class PublicVacancyController {
                         @RequestParam(defaultValue = "false") boolean whatsappEnabled,
                         @RequestParam String email,
                         HttpSession session,
-                        Model model) {
+                        Model model,
+                        Locale locale) {
         if (currentUser(session) != null) {
             return "redirect:/vacancies/" + id;
         }
         JobVacancy vacancy = publishedVacancy(id);
         String normalizedEmail = normalizeEmail(email);
-        String error = validateContact(firstName, lastName, phone, normalizedEmail);
+        String error = validateContact(firstName, lastName, phone, normalizedEmail, locale);
         if (error == null && applicationRepository
                 .findByVacancyIdAndGuestEmailIgnoreCase(id, normalizedEmail).isPresent()) {
-            error = "Отклик с этой почтой уже отправлен. Используйте ссылку на интервью из первого отклика.";
+            error = message("error.duplicate_application", locale);
         }
         if (error != null) {
             model.addAttribute("vacancy", vacancy);
@@ -153,21 +158,21 @@ public class PublicVacancyController {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
     }
 
-    private String validateContact(String firstName, String lastName, String phone, String email) {
+    private String validateContact(String firstName, String lastName, String phone, String email, Locale locale) {
         if (clean(firstName).isEmpty() || clean(lastName).isEmpty()) {
-            return "Укажите имя и фамилию.";
+            return message("error.name_required", locale);
         }
         if (clean(firstName).length() > 100 || clean(lastName).length() > 100) {
-            return "Имя и фамилия не должны превышать 100 символов.";
+            return message("error.name_too_long", locale);
         }
         if (!INTERNATIONAL_PHONE.matcher(clean(phone)).matches()) {
-            return "Телефон должен быть в международном формате, например +77001234567.";
+            return message("error.phone", locale);
         }
         if (!EMAIL.matcher(email).matches()) {
-            return "Укажите корректную электронную почту.";
+            return message("error.email", locale);
         }
         if (email.length() > 255) {
-            return "Электронная почта не должна превышать 255 символов.";
+            return message("error.email_too_long", locale);
         }
         return null;
     }
@@ -178,6 +183,10 @@ public class PublicVacancyController {
 
     private String clean(String value) {
         return value == null ? "" : value.trim();
+    }
+
+    private String message(String code, Locale locale) {
+        return messages.getMessage(code, null, locale);
     }
 
     private User currentUser(HttpSession session) {

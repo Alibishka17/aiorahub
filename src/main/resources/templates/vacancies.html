@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Открытые вакансии AI Ora Hub. Отклик доступен без регистрации.">
-    <title>Вакансии — AI Ora Hub</title>
+    <meta name="description" th:content="#{vacancies.meta}">
+    <title th:text="#{vacancies.title}">Vacancies - AI Ora Hub</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -13,36 +13,37 @@
 <body class="aiora-page vacancies-page">
 <header class="site-header">
     <div class="site-container site-header__inner">
-        <a href="/" class="brand" aria-label="AI Ora Hub — главная">
+        <a href="/" class="brand" th:attr="aria-label=#{brand.home}">
             <span class="brand-name"><span class="brand-ai">AI</span><span>Ora</span><span class="brand-hub">Hub</span></span>
         </a>
-        <nav class="site-nav" aria-label="Основная навигация">
-            <a href="/vacancies" aria-current="page">Вакансии</a>
-            <a href="/register?role=CANDIDATE">Создать кабинет</a>
+        <nav class="site-nav" th:attr="aria-label=#{nav.main}">
+            <a href="/vacancies" aria-current="page" th:text="#{nav.vacancies}">Vacancies</a>
+            <a href="/register?role=CANDIDATE" th:text="#{nav.create_account}">Create account</a>
         </nav>
-        <a href="/login" class="button button--primary">Войти в кабинет</a>
+        <div th:replace="~{fragments/language-switcher :: switcher}"></div>
+        <a href="/login" class="button button--primary" th:text="#{nav.login}">Sign in</a>
     </div>
 </header>
 
 <main>
     <section class="vacancies-heading">
         <div class="site-container">
-            <span class="auth-kicker">Открытые позиции</span>
-            <h1>Вакансии</h1>
-            <p>Выберите позицию и отправьте контакты работодателю. Для отклика регистрация не обязательна.</p>
+            <span class="auth-kicker" th:text="#{vacancies.kicker}">Open positions</span>
+            <h1 th:text="#{vacancies.heading}">Vacancies</h1>
+            <p th:text="#{vacancies.copy}">Choose a position.</p>
         </div>
     </section>
     <section class="vacancies-content">
         <div class="site-container vacancy-list">
-            <p th:if="${vacancies.isEmpty()}" class="vacancy-empty">Сейчас нет опубликованных вакансий.</p>
+            <p th:if="${vacancies.isEmpty()}" class="vacancy-empty" th:text="#{vacancies.empty}">No vacancies.</p>
             <article th:each="vacancy : ${vacancies}" class="vacancy-card">
                 <div>
-                    <span class="vacancy-state">Открыта для откликов</span>
+                    <span class="vacancy-state" th:text="#{vacancies.open}">Open</span>
                     <h2 th:text="${vacancy.title}">Название вакансии</h2>
                     <p th:text="${vacancy.description}">Описание вакансии</p>
                 </div>
                 <div class="vacancy-card__action">
-                    <a th:href="@{'/vacancies/' + ${vacancy.id}}" class="button button--secondary">Открыть вакансию</a>
+                    <a th:href="@{'/vacancies/' + ${vacancy.id}}" class="button button--secondary" th:text="#{vacancies.open_action}">Open vacancy</a>
                 </div>
             </article>
         </div>

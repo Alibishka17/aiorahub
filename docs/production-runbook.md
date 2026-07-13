@@ -99,6 +99,7 @@ Expected public behavior:
 - `https://aiorahub.com/vacancies` returns `200` and lists only published vacancies.
 - `https://www.aiorahub.com` redirects to the apex domain.
 - `/h2-console` is not exposed through Nginx.
+- `Accept-Language: ru`, `kk` or `en` selects the corresponding interface until the user stores a manual choice in `AIORAHUB_LANG`.
 
 ## Rollback
 

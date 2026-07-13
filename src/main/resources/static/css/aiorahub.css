@@ -1649,3 +1649,60 @@ a {
         grid-template-columns: 1fr;
     }
 }
+.language-switcher {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    min-height: 34px;
+    padding: 3px;
+    border: 1px solid var(--line, #d9e0e4);
+    border-radius: 6px;
+    background: #fff;
+}
+
+.language-switcher a {
+    display: grid;
+    place-items: center;
+    min-width: 38px;
+    height: 26px;
+    padding: 0 7px;
+    color: #667078;
+    font-size: 11px;
+    font-weight: 800;
+    text-decoration: none;
+}
+
+.language-switcher a.active {
+    color: #fff;
+    background: #172126;
+    border-radius: 4px;
+}
+
+.app-topbar .language-switcher {
+    margin-left: auto;
+}
+
+.auth-shell {
+    position: relative;
+}
+
+.auth-shell > .language-switcher {
+    position: absolute;
+    top: 42px;
+    right: 0;
+}
+
+@media (max-width: 620px) {
+    .site-header__inner {
+        gap: 8px;
+    }
+
+    .language-switcher a {
+        min-width: 30px;
+        padding: 0 5px;
+    }
+
+    .app-topbar {
+        gap: 8px;
+    }
+}

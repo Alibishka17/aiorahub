@@ -6,6 +6,7 @@ import com.truehire.repository.UserRepository;
 import com.truehire.service.PasswordService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
+import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,10 +24,13 @@ public class AuthController {
 
     private final UserRepository userRepository;
     private final PasswordService passwordService;
+    private final MessageSource messages;
 
-    public AuthController(UserRepository userRepository, PasswordService passwordService) {
+    public AuthController(UserRepository userRepository, PasswordService passwordService,
+                          MessageSource messages) {
         this.userRepository = userRepository;
         this.passwordService = passwordService;
+        this.messages = messages;
     }
 
     @GetMapping("/")
@@ -50,11 +54,12 @@ public class AuthController {
                         @RequestParam String password,
                         @RequestParam Role role,
                         HttpServletRequest request,
-                        Model model) {
+                        Model model,
+                        Locale locale) {
         String normalizedEmail = normalizeEmail(email);
         User user = userRepository.findByEmailIgnoreCase(normalizedEmail).orElse(null);
         if (user == null || user.getRole() != role || !passwordService.matches(password, user.getPassword())) {
-            model.addAttribute("error", "Неверная почта, пароль или тип кабинета.");
+            model.addAttribute("error", message("error.login", locale));
             model.addAttribute("email", normalizedEmail);
             model.addAttribute("selectedRole", role);
             return "login";
@@ -84,11 +89,12 @@ public class AuthController {
                            @RequestParam String password,
                            @RequestParam Role role,
                            HttpServletRequest request,
-                           Model model) {
+                           Model model,
+                           Locale locale) {
         String normalizedEmail = normalizeEmail(email);
-        String error = validateRegistration(firstName, lastName, phone, normalizedEmail, password);
+        String error = validateRegistration(firstName, lastName, phone, normalizedEmail, password, locale);
         if (error == null && userRepository.existsByEmailIgnoreCase(normalizedEmail)) {
-            error = "Аккаунт с такой почтой уже существует.";
+            error = message("error.account_exists", locale);
         }
         if (error != null) {
             model.addAttribute("error", error);
@@ -122,24 +128,28 @@ public class AuthController {
     }
 
     private String validateRegistration(String firstName, String lastName, String phone,
-                                        String email, String password) {
+                                        String email, String password, Locale locale) {
         if (firstName == null || firstName.isBlank() || lastName == null || lastName.isBlank()) {
-            return "Укажите имя и фамилию.";
+            return message("error.name_required", locale);
         }
         if (!INTERNATIONAL_PHONE.matcher(phone == null ? "" : phone.trim()).matches()) {
-            return "Телефон должен быть в международном формате, например +77001234567.";
+            return message("error.phone", locale);
         }
         if (!EMAIL.matcher(email).matches()) {
-            return "Укажите корректную электронную почту.";
+            return message("error.email", locale);
         }
         if (password == null || password.length() < 8) {
-            return "Пароль должен содержать минимум 8 символов.";
+            return message("error.password", locale);
         }
         return null;
     }
 
     private String normalizeEmail(String email) {
         return email == null ? "" : email.trim().toLowerCase(Locale.ROOT);
+    }
+
+    private String message(String code, Locale locale) {
+        return messages.getMessage(code, null, locale);
     }
 
     private void startSession(HttpServletRequest request, User user) {
