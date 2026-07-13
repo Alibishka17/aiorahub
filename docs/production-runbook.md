@@ -6,12 +6,14 @@
 - Origin: DigitalOcean Droplet `161.35.192.132`.
 - OS: Ubuntu.
 - Reverse proxy: Nginx on ports 80 and 443.
-- Application: `aiorahub.service`, Spring Boot on `127.0.0.1:8080`.
+- Application: `aiorahub.service`, Spring Boot under the `aiorahub` system user on `127.0.0.1:8080`.
 - Source checkout: `/opt/aiorahub`.
 - Artifact: `/opt/aiorahub/target/truehire-0.0.1-SNAPSHOT.jar`.
+- Database: PostgreSQL database and role `aiorahub`, listening on localhost only.
+- Runtime secrets: `/etc/aiorahub/aiorahub.env`, owned by `root:aiorahub`, mode `0640`.
 - DNS: Cloudflare authoritative nameservers.
 
-The application uses an in-memory H2 database. Restarting `aiorahub.service` deletes all runtime data and recreates demo data.
+Flyway owns the database schema. Hibernate validates it at startup and must not use `create` or `create-drop` in production. Demo records are inserted only when all core tables are empty.
 
 ## DNS
 
@@ -36,12 +38,29 @@ git fetch origin
 git pull --ff-only origin main
 mvn test
 sudo cp target/truehire-0.0.1-SNAPSHOT.jar /opt/aiorahub-backups/truehire-$(date -u +%Y%m%dT%H%M%SZ).jar
+sudo -u postgres pg_dump -Fc aiorahub > /opt/aiorahub-backups/aiorahub-$(date -u +%Y%m%dT%H%M%SZ).dump
 mvn clean package
 sudo systemctl restart aiorahub
 sudo systemctl is-active aiorahub
 ```
 
-The backup command must run before replacing or rebuilding the active artifact when behavior changes. Because the repository and build output share a directory today, prefer copying the current JAR to `/opt/aiorahub-backups` before `mvn clean package`.
+Both JAR and database backups must run before a production rebuild. The database dump contains personal data and must remain root-readable only (`chmod 0600`).
+
+## PostgreSQL and service identity
+
+The production environment file must contain `SPRING_PROFILES_ACTIVE=prod`, `DATABASE_URL`, `DATABASE_USERNAME`, and `DATABASE_PASSWORD`; use `deploy/systemd/aiorahub.env.example` as the key list. Never commit the real password.
+
+The installed unit must match `deploy/systemd/aiorahub.service`. After changing it:
+
+```bash
+sudo cp deploy/systemd/aiorahub.service /etc/systemd/system/aiorahub.service
+sudo systemctl daemon-reload
+sudo systemctl restart aiorahub
+sudo systemctl show aiorahub -p User -p Group -p NoNewPrivileges
+sudo systemd-analyze security aiorahub.service --no-pager
+```
+
+The PostgreSQL port must not be publicly reachable. Verify `ss -ltnp` shows port `5432` only on loopback and that the DigitalOcean firewall does not expose it.
 
 ## Nginx and TLS
 
@@ -59,6 +78,7 @@ TLS certificates are managed by Certbot and stored under `/etc/letsencrypt/live/
 ```bash
 systemctl is-active aiorahub nginx
 curl -fsS http://127.0.0.1:8080/ >/dev/null
+sudo -u postgres psql -d aiorahub -Atc 'select count(*) from users;'
 curl -fsSI https://aiorahub.com/
 curl -fsSI https://www.aiorahub.com/
 journalctl -u aiorahub -n 100 --no-pager
@@ -73,4 +93,4 @@ Expected public behavior:
 
 ## Rollback
 
-Restore the previous JAR from `/opt/aiorahub-backups`, restart `aiorahub.service`, and verify the local endpoint before checking the public domain. Restore the timestamped Nginx backup from `/root/aiorahub-backups` if the proxy configuration caused the incident.
+Restore the previous JAR from `/opt/aiorahub-backups`, restart `aiorahub.service`, and verify the local endpoint before checking the public domain. For a database rollback, stop the application, create a safety dump of the current database, recreate the target database, restore with `pg_restore`, and then restart the service. Restore the timestamped Nginx backup from `/root/aiorahub-backups` if the proxy configuration caused the incident.

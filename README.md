@@ -6,7 +6,7 @@
 
 ## Стек
 
-Java 17+, Spring Boot 3.2 (Web, Data JPA, Thymeleaf), H2 in-memory, собственная дизайн-система AioraHub и Tailwind CSS через CDN на служебных экранах.
+Java 17+, Spring Boot 3.2 (Web, Data JPA, Thymeleaf), PostgreSQL в production, Flyway, файловая H2 для локальной разработки, собственная дизайн-система AioraHub и Tailwind CSS через CDN на служебных экранах.
 
 ## Запуск
 
@@ -16,9 +16,9 @@ mvn spring-boot:run
 
 Откройте http://localhost:8080
 
-Внешняя БД не нужна — H2 поднимается в памяти, mock-данные загружаются автоматически при старте (работодатель с тремя вакансиями и кандидат Anna, уже прошедшая AI-интервью).
+Для локального запуска внешняя БД не нужна: данные сохраняются в `data/aiorahub.mv.db`, а Flyway создаёт схему. Mock-данные загружаются только в полностью пустую БД (работодатель с тремя вакансиями и кандидат Anna, уже прошедшая AI-интервью).
 
-Консоль H2: http://localhost:8080/h2-console (JDBC URL: `jdbc:h2:mem:truehire`, логин `sa`, без пароля).
+Чтобы начать локально с пустой БД, остановите приложение и удалите каталог `data/`.
 
 ## Демо-сценарий
 
@@ -34,10 +34,11 @@ mvn spring-boot:run
 
 - Домен: https://aiorahub.com
 - Сервер: DigitalOcean Droplet, Ubuntu, Nginx -> Spring Boot на `127.0.0.1:8080`.
+- Runtime: отдельный системный пользователь `aiorahub`, PostgreSQL доступна только локально.
 - DNS управляется Cloudflare.
 - Инструкции по сборке, выкладке, rollback и проверке: [`docs/production-runbook.md`](docs/production-runbook.md).
 
-Production остаётся демо-средой: H2 работает в памяти и полностью пересоздаётся при каждом перезапуске приложения.
+Production остаётся демо-средой по способу авторизации и интеграциям, но данные сохраняются в PostgreSQL между перезапусками.
 
 ## Структура
 

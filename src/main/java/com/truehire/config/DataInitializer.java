@@ -31,6 +31,13 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
+        if (userRepository.count() != 0
+                || vacancyRepository.count() != 0
+                || applicationRepository.count() != 0
+                || resultRepository.count() != 0) {
+            return;
+        }
+
         User employer = userRepository.save(new User(
                 AuthController.DEMO_EMPLOYER_EMAIL, "demo123", "Hans Weber (Berlin Tech GmbH)", Role.EMPLOYER));
 
