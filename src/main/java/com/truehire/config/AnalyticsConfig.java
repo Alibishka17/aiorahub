@@ -58,7 +58,7 @@ public class AnalyticsConfig implements WebMvcConfigurer {
         if (!"GET".equals(request.getMethod())) return false;
         String path = request.getRequestURI();
         if (path.startsWith("/admin") || path.startsWith("/api") || path.startsWith("/css")
-                || path.startsWith("/images") || path.startsWith("/error")) return false;
+                || path.startsWith("/images") || path.startsWith("/error") || path.equals("/favicon.ico")) return false;
         String userAgent = request.getHeader("User-Agent");
         if (userAgent == null) return true;
         String normalized = userAgent.toLowerCase(Locale.ROOT);

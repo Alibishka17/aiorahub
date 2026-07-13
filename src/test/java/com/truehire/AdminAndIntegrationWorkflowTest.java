@@ -130,6 +130,8 @@ class AdminAndIntegrationWorkflowTest {
                 .andExpect(status().isOk());
         mockMvc.perform(get("/admin/login").header("User-Agent", "Mozilla/5.0"))
                 .andExpect(status().isOk());
+        mockMvc.perform(get("/favicon.ico").header("User-Agent", "Mozilla/5.0"))
+                .andExpect(status().isNoContent());
         assertThat(visitRepository.count()).isEqualTo(before + 1);
     }
 }
