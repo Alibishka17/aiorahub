@@ -3,6 +3,7 @@ package com.truehire.config;
 import com.truehire.controller.AuthController;
 import com.truehire.model.*;
 import com.truehire.repository.*;
+import com.truehire.service.PasswordService;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
@@ -18,19 +19,29 @@ public class DataInitializer implements CommandLineRunner {
     private final JobVacancyRepository vacancyRepository;
     private final JobApplicationRepository applicationRepository;
     private final InterviewResultRepository resultRepository;
+    private final PasswordService passwordService;
 
     public DataInitializer(UserRepository userRepository,
                            JobVacancyRepository vacancyRepository,
                            JobApplicationRepository applicationRepository,
-                           InterviewResultRepository resultRepository) {
+                           InterviewResultRepository resultRepository,
+                           PasswordService passwordService) {
         this.userRepository = userRepository;
         this.vacancyRepository = vacancyRepository;
         this.applicationRepository = applicationRepository;
         this.resultRepository = resultRepository;
+        this.passwordService = passwordService;
     }
 
     @Override
     public void run(String... args) {
+        userRepository.findAll().stream()
+                .filter(user -> passwordService.needsUpgrade(user.getPassword()))
+                .forEach(user -> {
+                    user.setPassword(passwordService.encode(user.getPassword()));
+                    userRepository.save(user);
+                });
+
         if (userRepository.count() != 0
                 || vacancyRepository.count() != 0
                 || applicationRepository.count() != 0
@@ -39,13 +50,13 @@ public class DataInitializer implements CommandLineRunner {
         }
 
         User employer = userRepository.save(new User(
-                AuthController.DEMO_EMPLOYER_EMAIL, "demo123", "Hans Weber (Berlin Tech GmbH)", Role.EMPLOYER));
+                AuthController.DEMO_EMPLOYER_EMAIL, passwordService.encode("demo123"), "Hans Weber (Berlin Tech GmbH)", Role.EMPLOYER));
 
         userRepository.save(new User(
-                AuthController.DEMO_CANDIDATE_EMAIL, "demo123", "Алексей Петров", Role.CANDIDATE));
+                AuthController.DEMO_CANDIDATE_EMAIL, passwordService.encode("demo123"), "Алексей Петров", Role.CANDIDATE));
 
         User anna = userRepository.save(new User(
-                "anna.k@example.com", "demo123", "Anna Kowalska", Role.CANDIDATE));
+                "anna.k@example.com", passwordService.encode("demo123"), "Anna Kowalska", Role.CANDIDATE));
 
         JobVacancy javaDev = vacancyRepository.save(new JobVacancy(
                 "Java-разработчик (Берлин)",
@@ -77,13 +88,20 @@ public class DataInitializer implements CommandLineRunner {
         JobApplication annaApp = applicationRepository.save(new JobApplication(
                 javaDev.getId(), anna.getId(), ApplicationStatus.INTERVIEW_COMPLETED));
 
-        resultRepository.save(new InterviewResult(
+        InterviewResult result = new InterviewResult(
                 annaApp.getId(),
                 "Немецкий: B2 (Upper-Intermediate)",
                 "Кандидат адекватен, отвечает уверенно и по существу. Опыт работы с Java и Spring "
                         + "подтверждён в ходе технической части беседы. Мотивация к релокации высокая. "
                         + "Рекомендован к найму.",
                 "https://meet.google.com/rec/truehire-" + annaApp.getId(),
-                true));
+                true);
+        result.setSummary("Anna подтвердила опыт Java-разработки, готовность к релокации и знание немецкого языка на уровне B2.");
+        result.setTranscript("AI-интервьюер: Расскажите о вашем опыте со Spring Boot.\n"
+                + "Anna: Последние четыре года я разрабатываю backend-сервисы на Java и Spring Boot.\n"
+                + "AI-интервьюер: Когда вы готовы к релокации?\n"
+                + "Anna: После оффера смогу переехать в течение шести-восьми недель.");
+        result.setConclusion("Рекомендована к следующему этапу с техническим интервью команды.");
+        resultRepository.save(result);
     }
 }

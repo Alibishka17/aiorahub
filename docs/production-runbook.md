@@ -39,16 +39,23 @@ git pull --ff-only origin main
 mvn test
 sudo cp target/truehire-0.0.1-SNAPSHOT.jar /opt/aiorahub-backups/truehire-$(date -u +%Y%m%dT%H%M%SZ).jar
 sudo -u postgres pg_dump -Fc aiorahub > /opt/aiorahub-backups/aiorahub-$(date -u +%Y%m%dT%H%M%SZ).dump
+sudo tar -C /var/lib/aiorahub -czf /opt/aiorahub-backups/uploads-$(date -u +%Y%m%dT%H%M%SZ).tgz uploads
 mvn clean package
 sudo systemctl restart aiorahub
 sudo systemctl is-active aiorahub
 ```
 
-Both JAR and database backups must run before a production rebuild. The database dump contains personal data and must remain root-readable only (`chmod 0600`).
+JAR, database and uploads backups must run before a production rebuild. Database and CV archives contain personal data and must remain root-readable only (`chmod 0600`).
 
 ## PostgreSQL and service identity
 
-The production environment file must contain `SPRING_PROFILES_ACTIVE=prod`, `DATABASE_URL`, `DATABASE_USERNAME`, and `DATABASE_PASSWORD`; use `deploy/systemd/aiorahub.env.example` as the key list. Never commit the real password.
+The production environment file must contain `SPRING_PROFILES_ACTIVE=prod`, `DATABASE_URL`, `DATABASE_USERNAME`, and `DATABASE_PASSWORD`; use `deploy/systemd/aiorahub.env.example` as the key list. `UPLOAD_DIR` is optional and defaults to `/var/lib/aiorahub/uploads`. Never commit real passwords.
+
+Before the first release with CV uploads:
+
+```bash
+sudo install -d -o aiorahub -g aiorahub -m 0750 /var/lib/aiorahub/uploads
+```
 
 The installed unit must match `deploy/systemd/aiorahub.service`. After changing it:
 
@@ -93,4 +100,4 @@ Expected public behavior:
 
 ## Rollback
 
-Restore the previous JAR from `/opt/aiorahub-backups`, restart `aiorahub.service`, and verify the local endpoint before checking the public domain. For a database rollback, stop the application, create a safety dump of the current database, recreate the target database, restore with `pg_restore`, and then restart the service. Restore the timestamped Nginx backup from `/root/aiorahub-backups` if the proxy configuration caused the incident.
+Restore the previous JAR from `/opt/aiorahub-backups`, restart `aiorahub.service`, and verify the local endpoint before checking the public domain. For a database rollback, stop the application, create a safety dump of the current database, recreate the target database, restore with `pg_restore`, restore the matching uploads archive, and then restart the service. Restore the timestamped Nginx backup from `/root/aiorahub-backups` if the proxy configuration caused the incident.

@@ -22,6 +22,11 @@ public class JobApplication {
 
     private LocalDateTime createdAt;
 
+    @Column(length = 3000)
+    private String recruiterMessage;
+
+    private LocalDateTime confirmedAt;
+
     public JobApplication() {
     }
 
@@ -46,4 +51,10 @@ public class JobApplication {
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public String getRecruiterMessage() { return recruiterMessage; }
+    public void setRecruiterMessage(String recruiterMessage) { this.recruiterMessage = recruiterMessage; }
+
+    public LocalDateTime getConfirmedAt() { return confirmedAt; }
+    public void setConfirmedAt(LocalDateTime confirmedAt) { this.confirmedAt = confirmedAt; }
 }

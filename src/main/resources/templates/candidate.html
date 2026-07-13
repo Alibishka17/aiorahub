@@ -14,12 +14,12 @@
     <a href="/" class="brand" aria-label="AI Ora Hub — главная">
         <span class="brand-name"><span class="brand-ai">AI</span><span>Ora</span><span class="brand-hub">Hub</span></span>
     </a>
-    <div class="app-user"><span th:text="${user.name}">Соискатель</span><a href="/logout">Выйти</a></div>
+    <div class="app-user"><span th:text="${user.name}">Соискатель</span><form th:action="@{/logout}" method="post"><button type="submit">Выйти</button></form></div>
 </header>
 <div class="app-layout">
     <aside class="app-sidebar">
         <nav aria-label="Навигация специалиста">
-            <a href="#vacancies" class="active">Вакансии</a><span>Мои отклики</span><span>AI-интервью</span><span>Офферы</span><span>Релокация</span><span>Документы</span>
+            <a href="#profile">Мой профиль</a><a href="#vacancies" class="active">Вакансии</a><a href="#history">Мои отклики</a><span>AI-интервью</span><span>Офферы</span><span>Документы</span>
         </nav>
     </aside>
     <main class="app-main" id="vacancies">
@@ -29,8 +29,25 @@
                 <p>Откликнитесь — AI-агент проведёт структурированное интервью и передаст отчёт работодателю.</p>
             </div>
         </div>
+        <section class="profile-band" id="profile">
+            <div>
+                <span class="auth-kicker">Профиль соискателя</span>
+                <h2 th:text="${user.name}">Имя соискателя</h2>
+                <p><a th:href="${'mailto:' + user.email}" th:text="${user.email}">email</a><span th:if="${user.phone != null}"> · </span><a th:if="${user.phone != null}" th:href="${'tel:' + user.phone}" th:text="${user.phone}">телефон</a></p>
+                <p th:if="${user.telegramEnabled || user.whatsappEnabled}" class="contact-tags"><span th:if="${user.telegramEnabled}">Telegram</span><span th:if="${user.whatsappEnabled}">WhatsApp</span></p>
+            </div>
+            <div class="cv-control">
+                <a th:if="${user.cvStorageKey != null}" href="/candidate/cv" class="inline-link" th:text="${'Скачать ' + user.cvFileName}">Скачать CV</a>
+                <form th:action="@{/candidate/cv}" method="post" enctype="multipart/form-data" class="cv-form">
+                    <label class="app-label" for="cv">CV в PDF, DOC или DOCX</label>
+                    <input id="cv" type="file" name="cv" accept=".pdf,.doc,.docx" required class="app-input">
+                    <button type="submit" class="button button--dark" th:text="${user.cvStorageKey != null ? 'Заменить CV' : 'Загрузить CV'}">Загрузить CV</button>
+                </form>
+                <div th:if="${cvError}" class="form-alert" th:text="${cvError}">Ошибка CV</div>
+            </div>
+        </section>
         <p th:if="${vacancies.isEmpty()}" class="app-card">Вакансий пока нет.</p>
-        <div class="app-stack">
+        <div class="app-stack" id="history">
             <article th:each="v : ${vacancies}" th:with="app=${myApps[v.id]}" class="app-card">
                 <div class="record__head">
                     <div>
@@ -48,6 +65,16 @@
                 <div style="display: grid; gap: 8px; margin-top: 18px; color: var(--muted); font-size: 13px;">
                     <div><strong style="color: var(--ink);">Условия:</strong> <span th:text="${v.conditions}">Условия</span></div>
                     <div><strong style="color: var(--ink);">Требования:</strong> <span th:text="${v.candidateRequirements}">Требования</span></div>
+                </div>
+                <div th:if="${app != null && interviewResults[app.id] != null}" th:with="result=${interviewResults[app.id]}" class="candidate-result">
+                    <strong>История AI-интервью</strong>
+                    <p><span th:text="${result.aiLanguageScore}">B2</span> · <span th:text="${result.passed ? 'Интервью пройдено' : 'Требуется повторное интервью'}">Статус</span></p>
+                    <details class="report-details"><summary>Посмотреть результат</summary><p th:text="${result.summary != null ? result.summary : result.aiSoftSkillsComment}">Результат</p></details>
+                </div>
+                <div th:if="${app != null && (app.status.name() == 'OFFER_GRANTED' || app.status.name() == 'VISA_PROCESSING')}" class="candidate-letter">
+                    <span class="auth-kicker">Подтверждено рекрутером</span>
+                    <h4>Ваша кандидатура подтверждена</h4>
+                    <p th:text="${app.recruiterMessage != null ? app.recruiterMessage : 'Рекрутер подтвердил вашу кандидатуру. Ожидайте дальнейших инструкций.'}">Письмо рекрутера</p>
                 </div>
                 <div style="margin-top: 22px;">
                     <form th:if="${app == null}" th:action="@{'/candidate/apply/' + ${v.id}}" method="post">

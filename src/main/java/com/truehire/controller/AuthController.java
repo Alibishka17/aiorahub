@@ -3,26 +3,33 @@ package com.truehire.controller;
 import com.truehire.model.Role;
 import com.truehire.model.User;
 import com.truehire.repository.UserRepository;
+import com.truehire.service.PasswordService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-/**
- * Упрощённая «авторизация» для демо: вход одной кнопкой под демо-пользователем
- * нужной роли. Без Spring Security — храним id пользователя в HTTP-сессии.
- */
+import java.util.Locale;
+import java.util.regex.Pattern;
+
 @Controller
 public class AuthController {
 
     public static final String DEMO_EMPLOYER_EMAIL = "employer@truehire.io";
     public static final String DEMO_CANDIDATE_EMAIL = "candidate@truehire.io";
 
-    private final UserRepository userRepository;
+    private static final Pattern EMAIL = Pattern.compile("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$");
+    private static final Pattern INTERNATIONAL_PHONE = Pattern.compile("^\\+[1-9]\\d{7,14}$");
 
-    public AuthController(UserRepository userRepository) {
+    private final UserRepository userRepository;
+    private final PasswordService passwordService;
+
+    public AuthController(UserRepository userRepository, PasswordService passwordService) {
         this.userRepository = userRepository;
+        this.passwordService = passwordService;
     }
 
     @GetMapping("/")
@@ -36,16 +43,117 @@ public class AuthController {
     }
 
     @GetMapping("/login")
-    public String login(@RequestParam Role role, HttpSession session) {
-        String email = (role == Role.EMPLOYER) ? DEMO_EMPLOYER_EMAIL : DEMO_CANDIDATE_EMAIL;
-        User user = userRepository.findByEmail(email).orElseThrow();
-        session.setAttribute("userId", user.getId());
-        return (role == Role.EMPLOYER) ? "redirect:/employer" : "redirect:/candidate";
+    public String loginPage(@RequestParam(required = false) Role role, Model model) {
+        model.addAttribute("selectedRole", role == null ? Role.EMPLOYER : role);
+        return "login";
     }
 
-    @GetMapping("/logout")
+    @PostMapping("/login")
+    public String login(@RequestParam String email,
+                        @RequestParam String password,
+                        @RequestParam Role role,
+                        HttpServletRequest request,
+                        Model model) {
+        String normalizedEmail = normalizeEmail(email);
+        User user = userRepository.findByEmailIgnoreCase(normalizedEmail).orElse(null);
+        if (user == null || user.getRole() != role || !passwordService.matches(password, user.getPassword())) {
+            model.addAttribute("error", "Неверная почта, пароль или тип кабинета.");
+            model.addAttribute("email", normalizedEmail);
+            model.addAttribute("selectedRole", role);
+            return "login";
+        }
+
+        if (passwordService.needsUpgrade(user.getPassword())) {
+            user.setPassword(passwordService.encode(password));
+            userRepository.save(user);
+        }
+        startSession(request, user);
+        return redirectFor(user.getRole());
+    }
+
+    @GetMapping("/register")
+    public String registerPage(@RequestParam(required = false) Role role, Model model) {
+        model.addAttribute("selectedRole", role == null ? Role.CANDIDATE : role);
+        return "register";
+    }
+
+    @PostMapping("/register")
+    public String register(@RequestParam String firstName,
+                           @RequestParam String lastName,
+                           @RequestParam String phone,
+                           @RequestParam(defaultValue = "false") boolean telegramEnabled,
+                           @RequestParam(defaultValue = "false") boolean whatsappEnabled,
+                           @RequestParam String email,
+                           @RequestParam String password,
+                           @RequestParam Role role,
+                           HttpServletRequest request,
+                           Model model) {
+        String normalizedEmail = normalizeEmail(email);
+        String error = validateRegistration(firstName, lastName, phone, normalizedEmail, password);
+        if (error == null && userRepository.existsByEmailIgnoreCase(normalizedEmail)) {
+            error = "Аккаунт с такой почтой уже существует.";
+        }
+        if (error != null) {
+            model.addAttribute("error", error);
+            model.addAttribute("firstName", firstName.trim());
+            model.addAttribute("lastName", lastName.trim());
+            model.addAttribute("phone", phone.trim());
+            model.addAttribute("email", normalizedEmail);
+            model.addAttribute("telegramEnabled", telegramEnabled);
+            model.addAttribute("whatsappEnabled", whatsappEnabled);
+            model.addAttribute("selectedRole", role);
+            return "register";
+        }
+
+        User user = userRepository.save(new User(
+                normalizedEmail,
+                passwordService.encode(password),
+                firstName.trim(),
+                lastName.trim(),
+                phone.trim(),
+                telegramEnabled,
+                whatsappEnabled,
+                role));
+        startSession(request, user);
+        return redirectFor(role);
+    }
+
+    @PostMapping("/logout")
     public String logout(HttpSession session) {
         session.invalidate();
         return "redirect:/";
+    }
+
+    private String validateRegistration(String firstName, String lastName, String phone,
+                                        String email, String password) {
+        if (firstName == null || firstName.isBlank() || lastName == null || lastName.isBlank()) {
+            return "Укажите имя и фамилию.";
+        }
+        if (!INTERNATIONAL_PHONE.matcher(phone == null ? "" : phone.trim()).matches()) {
+            return "Телефон должен быть в международном формате, например +77001234567.";
+        }
+        if (!EMAIL.matcher(email).matches()) {
+            return "Укажите корректную электронную почту.";
+        }
+        if (password == null || password.length() < 8) {
+            return "Пароль должен содержать минимум 8 символов.";
+        }
+        return null;
+    }
+
+    private String normalizeEmail(String email) {
+        return email == null ? "" : email.trim().toLowerCase(Locale.ROOT);
+    }
+
+    private void startSession(HttpServletRequest request, User user) {
+        HttpSession oldSession = request.getSession(false);
+        if (oldSession != null) {
+            oldSession.invalidate();
+        }
+        request.getSession(true).setAttribute("userId", user.getId());
+    }
+
+    private String redirectFor(Role role) {
+        return role == Role.EMPLOYER ? "redirect:/employer" : "redirect:/candidate";
     }
 }

@@ -2,13 +2,21 @@ package com.truehire.controller;
 
 import com.truehire.model.*;
 import com.truehire.repository.*;
+import com.truehire.service.CvStorageService;
 import jakarta.servlet.http.HttpSession;
+import org.springframework.core.io.Resource;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.*;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 @Controller
 @RequestMapping("/candidate")
@@ -31,18 +39,21 @@ public class CandidateController {
     private final JobApplicationRepository applicationRepository;
     private final InterviewResultRepository resultRepository;
     private final VisaDocumentRepository documentRepository;
+    private final CvStorageService cvStorageService;
     private final Random random = new Random();
 
     public CandidateController(UserRepository userRepository,
                                JobVacancyRepository vacancyRepository,
                                JobApplicationRepository applicationRepository,
                                InterviewResultRepository resultRepository,
-                               VisaDocumentRepository documentRepository) {
+                               VisaDocumentRepository documentRepository,
+                               CvStorageService cvStorageService) {
         this.userRepository = userRepository;
         this.vacancyRepository = vacancyRepository;
         this.applicationRepository = applicationRepository;
         this.resultRepository = resultRepository;
         this.documentRepository = documentRepository;
+        this.cvStorageService = cvStorageService;
     }
 
     private User currentCandidate(HttpSession session) {
@@ -64,29 +75,75 @@ public class CandidateController {
     @GetMapping
     public String dashboard(HttpSession session, Model model) {
         User candidate = currentCandidate(session);
-        if (candidate == null) return "redirect:/";
+        if (candidate == null) return "redirect:/login?role=CANDIDATE";
 
-        List<JobVacancy> vacancies = vacancyRepository.findAll();
+        List<JobApplication> applications = applicationRepository.findByCandidateId(candidate.getId());
+        Map<Long, JobVacancy> vacancyMap = new LinkedHashMap<>();
+        vacancyRepository.findByStatus(VacancyStatus.PUBLISHED)
+                .forEach(v -> vacancyMap.put(v.getId(), v));
+        applications.forEach(app -> vacancyRepository.findById(app.getVacancyId())
+                .ifPresent(v -> vacancyMap.putIfAbsent(v.getId(), v)));
 
         Map<Long, JobApplication> myApplications = new HashMap<>();
-        for (JobApplication app : applicationRepository.findByCandidateId(candidate.getId())) {
+        Map<Long, InterviewResult> interviewResults = new HashMap<>();
+        for (JobApplication app : applications) {
             myApplications.put(app.getVacancyId(), app);
+            resultRepository.findByApplicationId(app.getId())
+                    .ifPresent(result -> interviewResults.put(app.getId(), result));
         }
 
         model.addAttribute("user", candidate);
-        model.addAttribute("vacancies", vacancies);
+        model.addAttribute("vacancies", new ArrayList<>(vacancyMap.values()));
         model.addAttribute("myApps", myApplications);
+        model.addAttribute("interviewResults", interviewResults);
         return "candidate";
+    }
+
+    @PostMapping("/cv")
+    public String uploadCv(@RequestParam("cv") MultipartFile cv,
+                           HttpSession session,
+                           Model model) {
+        User candidate = currentCandidate(session);
+        if (candidate == null) return "redirect:/login?role=CANDIDATE";
+        try {
+            String previousStorageKey = candidate.getCvStorageKey();
+            CvStorageService.StoredCv stored = cvStorageService.store(candidate.getId(), cv);
+            candidate.setCvFileName(stored.fileName());
+            candidate.setCvContentType(stored.contentType());
+            candidate.setCvStorageKey(stored.storageKey());
+            userRepository.save(candidate);
+            cvStorageService.delete(previousStorageKey);
+            return "redirect:/candidate#profile";
+        } catch (IllegalArgumentException | IOException ex) {
+            model.addAttribute("cvError", ex.getMessage());
+            return dashboard(session, model);
+        }
+    }
+
+    @GetMapping("/cv")
+    public ResponseEntity<Resource> downloadOwnCv(HttpSession session) throws IOException {
+        User candidate = currentCandidate(session);
+        if (candidate == null) return ResponseEntity.status(401).build();
+        if (candidate.getCvStorageKey() == null) return ResponseEntity.notFound().build();
+        Resource resource = cvStorageService.load(candidate.getCvStorageKey());
+        ContentDisposition disposition = ContentDisposition.attachment()
+                .filename(candidate.getCvFileName(), StandardCharsets.UTF_8)
+                .build();
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, disposition.toString())
+                .contentType(MediaType.parseMediaType(candidate.getCvContentType()))
+                .body(resource);
     }
 
     @PostMapping("/apply/{vacancyId}")
     public String apply(@PathVariable Long vacancyId, HttpSession session) {
         User candidate = currentCandidate(session);
-        if (candidate == null) return "redirect:/";
+        if (candidate == null) return "redirect:/login?role=CANDIDATE";
 
         boolean alreadyApplied = applicationRepository
                 .findByVacancyIdAndCandidateId(vacancyId, candidate.getId()).isPresent();
-        if (!alreadyApplied && vacancyRepository.existsById(vacancyId)) {
+        JobVacancy vacancy = vacancyRepository.findById(vacancyId).orElse(null);
+        if (!alreadyApplied && vacancy != null && vacancy.getStatus() == VacancyStatus.PUBLISHED) {
             applicationRepository.save(
                     new JobApplication(vacancyId, candidate.getId(), ApplicationStatus.APPLIED));
         }
@@ -98,7 +155,7 @@ public class CandidateController {
     @GetMapping("/interview/{appId}")
     public String interview(@PathVariable Long appId, HttpSession session, Model model) {
         User candidate = currentCandidate(session);
-        if (candidate == null) return "redirect:/";
+        if (candidate == null) return "redirect:/login?role=CANDIDATE";
 
         JobApplication app = ownApplication(appId, candidate);
         if (app == null) return "redirect:/candidate";
@@ -121,7 +178,7 @@ public class CandidateController {
     @PostMapping("/interview/{appId}/complete")
     public String completeInterview(@PathVariable Long appId, HttpSession session) {
         User candidate = currentCandidate(session);
-        if (candidate == null) return "redirect:/";
+        if (candidate == null) return "redirect:/login?role=CANDIDATE";
 
         JobApplication app = ownApplication(appId, candidate);
         if (app == null) return "redirect:/candidate";
@@ -131,8 +188,14 @@ public class CandidateController {
             String comment = AI_COMMENTS[random.nextInt(AI_COMMENTS.length)];
             String recordUrl = "https://meet.google.com/rec/truehire-" + app.getId();
 
-            resultRepository.save(
-                    new InterviewResult(app.getId(), languageScore, comment, recordUrl, true));
+            InterviewResult result = new InterviewResult(app.getId(), languageScore, comment, recordUrl, true);
+            result.setSummary("Кандидат подтвердил опыт, мотивацию и готовность к следующему этапу отбора.");
+            result.setTranscript("AI-интервьюер: Расскажите о вашем профессиональном опыте.\n"
+                    + candidate.getName() + ": Я описал ключевые проекты и свою роль в них.\n"
+                    + "AI-интервьюер: Почему вам интересна эта вакансия?\n"
+                    + candidate.getName() + ": Мой опыт соответствует требованиям, и я готов развиваться в международной команде.");
+            result.setConclusion(comment);
+            resultRepository.save(result);
 
             app.setStatus(ApplicationStatus.INTERVIEW_COMPLETED);
             applicationRepository.save(app);
@@ -145,7 +208,7 @@ public class CandidateController {
     @GetMapping("/visa/{appId}")
     public String visa(@PathVariable Long appId, HttpSession session, Model model) {
         User candidate = currentCandidate(session);
-        if (candidate == null) return "redirect:/";
+        if (candidate == null) return "redirect:/login?role=CANDIDATE";
 
         JobApplication app = ownApplication(appId, candidate);
         if (app == null) return "redirect:/candidate";
@@ -173,7 +236,7 @@ public class CandidateController {
                                   @RequestParam MultipartFile contract,
                                   HttpSession session) {
         User candidate = currentCandidate(session);
-        if (candidate == null) return "redirect:/";
+        if (candidate == null) return "redirect:/login?role=CANDIDATE";
 
         JobApplication app = ownApplication(appId, candidate);
         if (app == null || app.getStatus() != ApplicationStatus.OFFER_GRANTED) {
@@ -203,7 +266,7 @@ public class CandidateController {
     @PostMapping("/visa/{appId}/advance")
     public String advanceVisa(@PathVariable Long appId, HttpSession session) {
         User candidate = currentCandidate(session);
-        if (candidate == null) return "redirect:/";
+        if (candidate == null) return "redirect:/login?role=CANDIDATE";
 
         JobApplication app = ownApplication(appId, candidate);
         if (app == null) return "redirect:/candidate";

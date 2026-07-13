@@ -36,6 +36,7 @@ AmbientCapabilities=
 RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
 IPAddressDeny=any
 IPAddressAllow=localhost
+ReadWritePaths=/var/lib/aiorahub
 SystemCallArchitectures=native
 
 [Install]

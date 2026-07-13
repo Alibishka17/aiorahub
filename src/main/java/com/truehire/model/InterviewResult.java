@@ -17,6 +17,15 @@ public class InterviewResult {
     @Column(length = 2000)
     private String aiSoftSkillsComment;
 
+    @Column(length = 3000)
+    private String summary;
+
+    @Column(length = 12000)
+    private String transcript;
+
+    @Column(length = 3000)
+    private String conclusion;
+
     private String interviewRecordUrl;
 
     private boolean isPassed;
@@ -50,4 +59,13 @@ public class InterviewResult {
 
     public boolean isPassed() { return isPassed; }
     public void setPassed(boolean passed) { isPassed = passed; }
+
+    public String getSummary() { return summary; }
+    public void setSummary(String summary) { this.summary = summary; }
+
+    public String getTranscript() { return transcript; }
+    public void setTranscript(String transcript) { this.transcript = transcript; }
+
+    public String getConclusion() { return conclusion; }
+    public void setConclusion(String conclusion) { this.conclusion = conclusion; }
 }

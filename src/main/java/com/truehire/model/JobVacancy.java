@@ -1,6 +1,7 @@
 package com.truehire.model;
 
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
 
 @Entity
 public class JobVacancy {
@@ -24,6 +25,12 @@ public class JobVacancy {
     @Column(nullable = false)
     private Long employerId;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private VacancyStatus status = VacancyStatus.PUBLISHED;
+
+    private LocalDateTime createdAt = LocalDateTime.now();
+
     public JobVacancy() {
     }
 
@@ -34,6 +41,8 @@ public class JobVacancy {
         this.conditions = conditions;
         this.candidateRequirements = candidateRequirements;
         this.employerId = employerId;
+        this.status = VacancyStatus.PUBLISHED;
+        this.createdAt = LocalDateTime.now();
     }
 
     public Long getId() { return id; }
@@ -53,4 +62,10 @@ public class JobVacancy {
 
     public Long getEmployerId() { return employerId; }
     public void setEmployerId(Long employerId) { this.employerId = employerId; }
+
+    public VacancyStatus getStatus() { return status; }
+    public void setStatus(VacancyStatus status) { this.status = status; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 }
