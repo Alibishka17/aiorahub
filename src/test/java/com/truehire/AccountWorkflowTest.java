@@ -29,6 +29,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.cookie;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.flash;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -314,11 +315,13 @@ class AccountWorkflowTest {
                 .orElseThrow();
         assertThat(application.getStatus()).isEqualTo(ApplicationStatus.APPLIED);
         assertThat(start.getResponse().getRedirectedUrl())
-                .isEqualTo("/candidate?view=applications");
+                .isEqualTo("/vacancies/" + vacancy.getId());
 
         mockMvc.perform(post("/candidate/apply/{id}", vacancy.getId()).with(csrf()).session(session))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/candidate?view=applications"));
+                .andExpect(redirectedUrl("/vacancies/" + vacancy.getId()))
+                .andExpect(flash().attribute("interviewError",
+                        "The AI interview is temporarily unavailable. Please try again in a few minutes."));
         assertThat(applicationRepository.findByCandidateId(candidate.getId()))
                 .filteredOn(app -> app.getVacancyId().equals(vacancy.getId()))
                 .hasSize(1);

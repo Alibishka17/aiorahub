@@ -6,6 +6,8 @@ import com.truehire.service.AccountSettingsService;
 import com.truehire.service.CvStorageService;
 import com.truehire.service.InterviewLaunchService;
 import jakarta.servlet.http.HttpSession;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.MessageSource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.ContentDisposition;
@@ -26,6 +28,7 @@ import java.util.*;
 @RequestMapping("/candidate")
 public class CandidateController {
 
+    private static final Logger log = LoggerFactory.getLogger(CandidateController.class);
     private static final Set<String> VIEWS = Set.of("dashboard", "vacancies", "applications", "documents", "settings");
 
     private final UserRepository userRepository;
@@ -205,7 +208,10 @@ public class CandidateController {
     }
 
     @PostMapping("/apply/{vacancyId}")
-    public String apply(@PathVariable Long vacancyId, HttpSession session) {
+    public String apply(@PathVariable Long vacancyId,
+                        HttpSession session,
+                        Locale locale,
+                        RedirectAttributes redirectAttributes) {
         User candidate = currentCandidate(session);
         if (candidate == null) return "redirect:/login?role=CANDIDATE";
         JobVacancy vacancy = vacancyRepository.findById(vacancyId).orElse(null);
@@ -221,12 +227,15 @@ public class CandidateController {
         try {
             return "redirect:" + interviewLaunchService.launch(application, vacancy, candidate.getEmail());
         } catch (IllegalStateException ex) {
-            return "redirect:/candidate?view=applications";
+            return interviewLaunchFailure(application, vacancy, locale, redirectAttributes, ex);
         }
     }
 
     @PostMapping("/applications/{appId}/interview")
-    public String startInterview(@PathVariable Long appId, HttpSession session) {
+    public String startInterview(@PathVariable Long appId,
+                                 HttpSession session,
+                                 Locale locale,
+                                 RedirectAttributes redirectAttributes) {
         User candidate = currentCandidate(session);
         if (candidate == null) return "redirect:/login?role=CANDIDATE";
         JobApplication application = ownApplication(appId, candidate);
@@ -236,8 +245,20 @@ public class CandidateController {
         try {
             return "redirect:" + interviewLaunchService.launch(application, vacancy, candidate.getEmail());
         } catch (IllegalStateException ex) {
-            return "redirect:/candidate?view=applications";
+            return interviewLaunchFailure(application, vacancy, locale, redirectAttributes, ex);
         }
+    }
+
+    private String interviewLaunchFailure(JobApplication application,
+                                          JobVacancy vacancy,
+                                          Locale locale,
+                                          RedirectAttributes redirectAttributes,
+                                          IllegalStateException error) {
+        log.error("Unable to launch HRme interview for application {} and vacancy {}",
+                application.getId(), vacancy.getId(), error);
+        redirectAttributes.addFlashAttribute("interviewError",
+                messages.getMessage("error.interview_unavailable", null, locale));
+        return "redirect:/vacancies/" + vacancy.getId();
     }
 
     @GetMapping("/visa/{appId}")

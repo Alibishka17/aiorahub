@@ -125,6 +125,29 @@ class AdminAndIntegrationWorkflowTest {
     }
 
     @Test
+    void returnsToVacancyWithVisibleErrorWhenHrmeCannotLaunchInterview() throws Exception {
+        User employer = userRepository.save(new User(
+                "failed-owner@example.com", "unused", "Failed Owner", Role.EMPLOYER));
+        User candidate = userRepository.save(new User(
+                "failed-candidate@example.com", "unused", "Failed Candidate", Role.CANDIDATE));
+        JobVacancy vacancy = vacancyRepository.save(new JobVacancy(
+                "Welder in Poland", "Welding", "Relocation", "Experience", employer.getId()));
+        JobApplication application = applicationRepository.save(new JobApplication(
+                vacancy.getId(), candidate.getId(), ApplicationStatus.APPLIED));
+        when(hrmeClient.createInterview(anyLong(), anyLong(), any(), any()))
+                .thenThrow(new IllegalStateException("HRme unavailable"));
+        MockHttpSession candidateSession = new MockHttpSession();
+        candidateSession.setAttribute("userId", candidate.getId());
+
+        mockMvc.perform(post("/candidate/applications/{id}/interview", application.getId())
+                        .with(csrf()).session(candidateSession))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/vacancies/" + vacancy.getId()))
+                .andExpect(flash().attribute("interviewError",
+                        "The AI interview is temporarily unavailable. Please try again in a few minutes."));
+    }
+
+    @Test
     void tracksFirstPartyVisitsWithoutTrackingAdminOrApiPages() throws Exception {
         long before = visitRepository.count();
         mockMvc.perform(get("/vacancies").header("User-Agent", "Mozilla/5.0"))

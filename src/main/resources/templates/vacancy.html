@@ -51,6 +51,7 @@
         </article>
         <aside class="vacancy-apply-panel">
             <h2 th:text="#{vacancy.apply_heading}">Apply</h2>
+            <div th:if="${interviewError}" class="form-alert" th:text="${interviewError}">Interview is temporarily unavailable.</div>
             <div th:if="${currentUser == null}">
                 <p th:text="#{vacancy.guest_copy}">Provide contact details.</p>
                 <a th:href="@{'/vacancies/' + ${vacancy.id} + '/apply'}" class="button button--primary button--full" th:text="#{vacancy.apply}">Apply</a>
