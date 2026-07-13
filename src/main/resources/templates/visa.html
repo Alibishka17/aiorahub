@@ -3,16 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TrueHire — Визовое сопровождение</title>
+    <title>AioraHub — Визовое сопровождение</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/css/aiorahub.css">
 </head>
-<body class="bg-slate-50 min-h-screen">
+<body class="aiora-app bg-slate-50 min-h-screen">
 
 <nav class="bg-white border-b border-slate-200">
     <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-        <a href="/" class="flex items-center gap-2">
-            <div class="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center text-white font-bold">T</div>
-            <span class="text-xl font-bold text-slate-900">True<span class="text-indigo-600">Hire</span></span>
+        <a href="/" class="brand" aria-label="AioraHub — главная">
+            <img src="/images/aiorahub-mark.png" alt="" class="brand-mark">
+            <span class="brand-name">Aiora<span>Hub</span></span>
         </a>
         <a href="/candidate" class="text-sm text-slate-400 hover:text-slate-600">← К вакансиям</a>
     </div>
@@ -21,8 +25,8 @@
 <main class="max-w-4xl mx-auto px-6 py-10">
 
     <div class="text-center mb-10">
-        <span class="inline-block bg-purple-100 text-purple-700 text-xs font-semibold px-3 py-1 rounded-full mb-3">
-            Visa Tech Module
+        <span class="inline-block bg-teal-50 text-teal-700 text-xs font-semibold px-3 py-1 rounded-full mb-3">
+            Relocation Hub
         </span>
         <h1 class="text-3xl font-bold text-slate-900">Визовое сопровождение</h1>
         <p class="text-slate-500 mt-2">
@@ -81,7 +85,7 @@
                        class="w-full text-sm text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-indigo-50 file:text-indigo-700 file:font-semibold hover:file:bg-indigo-100">
             </div>
             <button type="submit"
-                    class="w-full bg-purple-600 text-white font-semibold rounded-lg py-3 hover:bg-purple-700 transition">
+                    class="w-full bg-red-500 text-white font-semibold rounded-lg py-3 hover:bg-red-600 transition">
                 Отправить документы
             </button>
         </form>

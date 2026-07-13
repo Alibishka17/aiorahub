@@ -3,79 +3,177 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TrueHire — AI-найм и визовое сопровождение</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <meta name="description" content="AioraHub — единая HRM-платформа для международного найма, AI-скрининга, интервью, релокации и визового сопровождения.">
+    <title>AioraHub — международный найм и AI-скрининг</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/aiorahub.css">
 </head>
-<body class="bg-slate-50 min-h-screen flex flex-col">
+<body class="aiora-page">
 
-<nav class="bg-white border-b border-slate-200">
-    <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-        <div class="flex items-center gap-2">
-            <div class="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center text-white font-bold">T</div>
-            <span class="text-xl font-bold text-slate-900">True<span class="text-indigo-600">Hire</span></span>
-        </div>
-        <span class="text-sm text-slate-400">Прототип · Demo для инвесторов</span>
+<header class="site-header">
+    <div class="site-container site-header__inner">
+        <a href="/" class="brand" aria-label="AioraHub — главная">
+            <img src="/images/aiorahub-mark.png" alt="" class="brand-mark">
+            <span class="brand-name">Aiora<span>Hub</span></span>
+        </a>
+        <nav class="site-nav" aria-label="Основная навигация">
+            <a href="#process">Как это работает</a>
+            <a href="#hrm">HRM для рекрутеров</a>
+            <a href="#audiences">Для кого</a>
+        </nav>
+        <a href="/login?role=EMPLOYER" class="button button--primary">Открыть HRM</a>
     </div>
-</nav>
+</header>
 
-<main class="flex-1">
-    <section class="max-w-6xl mx-auto px-6 pt-20 pb-16 text-center">
-        <span class="inline-block bg-indigo-100 text-indigo-700 text-xs font-semibold px-3 py-1 rounded-full mb-6">
-            SaaS-платформа международного найма
-        </span>
-        <h1 class="text-5xl font-extrabold text-slate-900 leading-tight mb-6">
-            Найм иностранных специалистов<br>
-            <span class="text-indigo-600">без HR-рутины и визового хаоса</span>
-        </h1>
-        <p class="max-w-2xl mx-auto text-lg text-slate-600 mb-10">
-            TrueHire автоматизирует путь от отклика до рабочей визы: AI-агент проводит
-            видеоинтервью, оценивает уровень языка и адекватность кандидата, а визовый модуль
-            ведёт документы до одобрения в посольстве Германии.
-        </p>
-        <div class="flex flex-col sm:flex-row gap-4 justify-center">
-            <a href="/login?role=EMPLOYER"
-               class="px-8 py-4 rounded-xl bg-indigo-600 text-white font-semibold text-lg hover:bg-indigo-700 transition shadow-lg shadow-indigo-200">
-                Войти как Работодатель
-            </a>
-            <a href="/login?role=CANDIDATE"
-               class="px-8 py-4 rounded-xl bg-white text-indigo-700 font-semibold text-lg border-2 border-indigo-200 hover:border-indigo-400 transition">
-                Войти как Соискатель
-            </a>
+<main>
+    <section class="hero">
+        <div class="site-container hero__inner">
+            <div class="hero__copy">
+                <h1>Таланты находят работу. Компании — <span>людей.</span></h1>
+                <p>
+                    AioraHub объединяет рекрутеров и международных специалистов на каждом этапе:
+                    от отклика и AI-скрининга до оффера, релокации и визовой поддержки.
+                </p>
+                <div class="hero__actions">
+                    <a href="/login?role=EMPLOYER" class="button button--primary">Я работодатель</a>
+                    <a href="/login?role=CANDIDATE" class="button button--secondary">Я соискатель</a>
+                </div>
+                <div class="hero__proof" aria-label="Возможности платформы">
+                    <span>AI-скрининг и интервью</span>
+                    <span>Единая HRM-система</span>
+                    <span>Релокация и визы</span>
+                </div>
+            </div>
+        </div>
+        <img src="/images/aiorahub-hero.png" alt="Рекрутер обсуждает карьерные возможности с кандидатом" class="hero__photo">
+    </section>
+
+    <section class="section" id="process">
+        <div class="site-container">
+            <h2 class="section-heading">Один процесс. От первого контакта до <span>первого рабочего дня.</span></h2>
+            <div class="journey">
+                <article class="journey-step">
+                    <div class="journey-step__number">01</div>
+                    <h3>Отклик</h3>
+                    <p>Кандидат выбирает вакансию, рекрутер сразу видит новый профиль.</p>
+                </article>
+                <article class="journey-step">
+                    <div class="journey-step__number">02</div>
+                    <h3>AI-скрининг</h3>
+                    <p>Система анализирует профиль и помогает выделить подходящих специалистов.</p>
+                </article>
+                <article class="journey-step">
+                    <div class="journey-step__number">03</div>
+                    <h3>AI-интервью</h3>
+                    <p>Структурированное интервью оценивает язык, опыт и soft skills.</p>
+                </article>
+                <article class="journey-step">
+                    <div class="journey-step__number">04</div>
+                    <h3>Оффер</h3>
+                    <p>Рекрутер принимает решение и переводит кандидата на следующий этап.</p>
+                </article>
+                <article class="journey-step">
+                    <div class="journey-step__number">05</div>
+                    <h3>Релокация</h3>
+                    <p>Команда сопровождает переезд, адаптацию и выход на работу.</p>
+                </article>
+                <article class="journey-step">
+                    <div class="journey-step__number">06</div>
+                    <h3>Виза</h3>
+                    <p>Документы и статусы визового процесса находятся в одном кабинете.</p>
+                </article>
+            </div>
         </div>
     </section>
 
-    <section class="max-w-6xl mx-auto px-6 pb-20">
-        <div class="grid md:grid-cols-3 gap-6">
-            <div class="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm">
-                <div class="w-12 h-12 rounded-xl bg-indigo-100 flex items-center justify-center text-2xl mb-4">🤖</div>
-                <h3 class="font-bold text-slate-900 text-lg mb-2">AI-скрининг</h3>
-                <p class="text-slate-600 text-sm">
-                    AI-агент проводит интервью в Google Meet, оценивает уровень немецкого
-                    и формирует отчёт о soft skills для работодателя.
+    <section class="section section--soft" id="hrm">
+        <div class="site-container product-band">
+            <div class="product-copy">
+                <h2>HRM, в которой AI действительно работает.</h2>
+                <p>
+                    Вакансии, кандидаты, результаты скрининга, интервью и офферы собраны в одном
+                    рабочем контуре. Рекрутер видит не набор разрозненных инструментов, а следующий шаг.
                 </p>
+                <a href="/login?role=EMPLOYER" class="button button--dark">Посмотреть кабинет</a>
             </div>
-            <div class="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm">
-                <div class="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center text-2xl mb-4">📋</div>
-                <h3 class="font-bold text-slate-900 text-lg mb-2">Job Offer в один клик</h3>
-                <p class="text-slate-600 text-sm">
-                    Работодатель видит только проверенных кандидатов с отчётом AI
-                    и выдаёт оффер прямо из кабинета.
-                </p>
+            <div class="product-screen" aria-label="Интерфейс HRM AioraHub">
+                <div class="product-screen__bar">
+                    <span class="product-screen__title">Кандидаты · Java-разработчик</span>
+                    <span class="status">AI-скрининг активен</span>
+                </div>
+                <div class="product-screen__content">
+                    <div class="pipeline">
+                        <span>Новые</span>
+                        <span>AI-скрининг</span>
+                        <span>Интервью</span>
+                        <span>Оффер</span>
+                        <span>Релокация</span>
+                    </div>
+                    <div class="candidate-row">
+                        <div class="candidate-person">
+                            <span class="candidate-avatar">AK</span>
+                            <span><strong>Anna Kowalska</strong><small>Java-разработчик · B2</small></span>
+                        </div>
+                        <span class="score">86</span>
+                        <span class="status">Интервью пройдено</span>
+                        <button class="mini-action" type="button">AI-отчёт</button>
+                    </div>
+                    <div class="candidate-row">
+                        <div class="candidate-person">
+                            <span class="candidate-avatar">АП</span>
+                            <span><strong>Алексей Петров</strong><small>Медицинский специалист · B1</small></span>
+                        </div>
+                        <span class="score">72</span>
+                        <span class="status">Скрининг</span>
+                        <button class="mini-action" type="button">Профиль</button>
+                    </div>
+                </div>
             </div>
-            <div class="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm">
-                <div class="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center text-2xl mb-4">🛂</div>
-                <h3 class="font-bold text-slate-900 text-lg mb-2">Визовое сопровождение</h3>
-                <p class="text-slate-600 text-sm">
-                    Платформа собирает документы, проверяет их и ведёт кейс
-                    до одобрения визы посольством Германии.
-                </p>
+        </div>
+    </section>
+
+    <section class="audiences" id="audiences">
+        <article class="audience">
+            <h2>Для компаний</h2>
+            <p>Прозрачный pipeline найма и меньше ручной работы на каждом этапе.</p>
+            <ul>
+                <li>Вакансии и отклики в одном рабочем пространстве</li>
+                <li>AI-оценка языка, опыта и soft skills</li>
+                <li>Оффер, релокация и визовые статусы без таблиц</li>
+            </ul>
+        </article>
+        <article class="audience">
+            <h2>Для специалистов</h2>
+            <p>Понятный путь к международной работе с поддержкой после оффера.</p>
+            <ul>
+                <li>Проверенные вакансии и понятные требования</li>
+                <li>Структурированное AI-интервью без лишних созвонов</li>
+                <li>Сопровождение документов, переезда и визы</li>
+            </ul>
+        </article>
+    </section>
+
+    <section class="cta-band">
+        <div class="site-container cta-band__inner">
+            <h2>Начните путь с AioraHub.</h2>
+            <div class="cta-band__actions">
+                <a href="/login?role=EMPLOYER" class="button button--dark">Я работодатель</a>
+                <a href="/login?role=CANDIDATE" class="button button--secondary">Я соискатель</a>
             </div>
         </div>
     </section>
 </main>
 
-<footer class="border-t border-slate-200 py-6 text-center text-sm text-slate-400">
-    TrueHire © 2026 · Прототип. Все данные — демонстрационные.
+<footer class="site-footer">
+    <div class="site-container site-footer__inner">
+        <a href="/" class="brand">
+            <img src="/images/aiorahub-mark.png" alt="" class="brand-mark">
+            <span class="brand-name">Aiora<span>Hub</span></span>
+        </a>
+        <span>© 2026 AioraHub · Демонстрационная версия</span>
+    </div>
 </footer>
 
 </body>

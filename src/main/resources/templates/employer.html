@@ -3,136 +3,102 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TrueHire — Кабинет работодателя</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>AioraHub HRM — Кабинет работодателя</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/aiorahub.css">
 </head>
-<body class="bg-slate-50 min-h-screen">
-
-<nav class="bg-white border-b border-slate-200">
-    <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-        <a href="/" class="flex items-center gap-2">
-            <div class="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center text-white font-bold">T</div>
-            <span class="text-xl font-bold text-slate-900">True<span class="text-indigo-600">Hire</span></span>
-        </a>
-        <div class="flex items-center gap-4">
-            <span class="text-sm text-slate-600" th:text="${user.name}">Работодатель</span>
-            <a href="/logout" class="text-sm text-slate-400 hover:text-slate-600">Выйти</a>
-        </div>
+<body class="aiora-app">
+<header class="app-topbar">
+    <a href="/" class="brand" aria-label="AioraHub — главная">
+        <img src="/images/aiorahub-mark.png" alt="" class="brand-mark">
+        <span class="brand-name">Aiora<span>Hub</span></span>
+    </a>
+    <div class="app-user">
+        <span th:text="${user.name}">Работодатель</span>
+        <a href="/logout">Выйти</a>
     </div>
-</nav>
-
-<main class="max-w-6xl mx-auto px-6 py-10 space-y-10">
-
-    <h1 class="text-3xl font-bold text-slate-900">Кабинет работодателя</h1>
-
-    <div class="grid lg:grid-cols-2 gap-8">
-        <!-- Форма создания вакансии -->
-        <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-8">
-            <h2 class="text-lg font-bold text-slate-900 mb-6">Новая вакансия</h2>
-            <form action="/employer/vacancies" method="post" class="space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">Название</label>
-                    <input name="title" required placeholder="Например: DevOps-инженер (Франкфурт)"
-                           class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">Описание работы</label>
-                    <textarea name="description" required rows="3" placeholder="Чем предстоит заниматься"
-                              class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">Условия</label>
-                    <textarea name="conditions" required rows="2" placeholder="Зарплата, релокация, жильё"
-                              class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">Требования к кандидату</label>
-                    <textarea name="candidateRequirements" required rows="2" placeholder="Опыт, язык, образование"
-                              class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
-                </div>
-                <button type="submit"
-                        class="w-full bg-indigo-600 text-white font-semibold rounded-lg py-3 hover:bg-indigo-700 transition">
-                    Опубликовать вакансию
-                </button>
-            </form>
-        </section>
-
-        <!-- Список вакансий -->
-        <section class="space-y-4">
-            <h2 class="text-lg font-bold text-slate-900">Мои вакансии</h2>
-            <p th:if="${vacancies.isEmpty()}" class="text-slate-400 text-sm">Пока нет вакансий.</p>
-            <div th:each="v : ${vacancies}" class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
-                <h3 class="font-bold text-slate-900" th:text="${v.title}">Вакансия</h3>
-                <p class="text-sm text-slate-600 mt-2" th:text="${v.description}">Описание</p>
-                <p class="text-xs text-slate-500 mt-3">
-                    <span class="font-semibold text-slate-600">Условия:</span>
-                    <span th:text="${v.conditions}">Условия</span>
-                </p>
-                <p class="text-xs text-slate-500 mt-1">
-                    <span class="font-semibold text-slate-600">Требования:</span>
-                    <span th:text="${v.candidateRequirements}">Требования</span>
-                </p>
+</header>
+<div class="app-layout">
+    <aside class="app-sidebar">
+        <nav aria-label="HRM навигация">
+            <a href="#overview">Обзор</a>
+            <a href="#vacancies">Вакансии</a>
+            <a href="#candidates" class="active">Кандидаты</a>
+            <span>AI-скрининг</span><span>Интервью</span><span>Офферы</span><span>Релокация</span>
+        </nav>
+    </aside>
+    <main class="app-main">
+        <div class="app-heading" id="overview">
+            <div>
+                <h1>Рабочее пространство рекрутера</h1>
+                <p>Управляйте вакансиями и движением кандидатов по единому pipeline.</p>
             </div>
-        </section>
-    </div>
-
-    <!-- Отклики -->
-    <section>
-        <h2 class="text-lg font-bold text-slate-900 mb-4">Отклики кандидатов</h2>
-        <p th:if="${responses.isEmpty()}" class="text-slate-400 text-sm">Откликов пока нет.</p>
-
-        <div class="space-y-4">
-            <div th:each="r : ${responses}" class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
-                <div class="flex flex-wrap items-start justify-between gap-4">
-                    <div>
-                        <h3 class="font-bold text-slate-900" th:text="${r.candidate != null ? r.candidate.name : 'Кандидат'}">Кандидат</h3>
-                        <p class="text-sm text-slate-500" th:text="${r.candidate != null ? r.candidate.email : ''}">email</p>
-                        <p class="text-sm text-indigo-600 font-medium mt-1"
-                           th:text="${r.vacancy != null ? r.vacancy.title : ''}">Вакансия</p>
+            <a href="#new-vacancy" class="button button--primary">Создать вакансию</a>
+        </div>
+        <div class="pipeline" aria-label="Этапы найма">
+            <span>Новые кандидаты</span><span>AI-скрининг</span><span>Интервью</span><span>Оффер</span><span>Релокация</span>
+        </div>
+        <div class="app-grid" id="vacancies">
+            <section class="app-panel" id="new-vacancy">
+                <div class="app-panel__header"><h2>Новая вакансия</h2></div>
+                <div class="app-panel__body">
+                    <form action="/employer/vacancies" method="post" class="app-form">
+                        <div><label class="app-label" for="title">Название</label><input id="title" name="title" required placeholder="DevOps-инженер (Франкфурт)" class="app-input"></div>
+                        <div><label class="app-label" for="description">Описание работы</label><textarea id="description" name="description" required rows="3" placeholder="Чем предстоит заниматься" class="app-input"></textarea></div>
+                        <div><label class="app-label" for="conditions">Условия</label><textarea id="conditions" name="conditions" required rows="2" placeholder="Зарплата, релокация, жильё" class="app-input"></textarea></div>
+                        <div><label class="app-label" for="requirements">Требования</label><textarea id="requirements" name="candidateRequirements" required rows="2" placeholder="Опыт, язык, образование" class="app-input"></textarea></div>
+                        <button type="submit" class="button button--primary">Опубликовать вакансию</button>
+                    </form>
+                </div>
+            </section>
+            <section class="app-panel">
+                <div class="app-panel__header"><h2>Активные вакансии</h2><span class="status" th:text="${vacancies.size() + ' позиций'}">3 позиции</span></div>
+                <div class="record-list">
+                    <p th:if="${vacancies.isEmpty()}" class="record">Пока нет вакансий.</p>
+                    <article th:each="v : ${vacancies}" class="record">
+                        <h3 th:text="${v.title}">Вакансия</h3>
+                        <p th:text="${v.description}">Описание</p>
+                        <p><strong>Условия:</strong> <span th:text="${v.conditions}">Условия</span></p>
+                        <p><strong>Требования:</strong> <span th:text="${v.candidateRequirements}">Требования</span></p>
+                    </article>
+                </div>
+            </section>
+        </div>
+        <section class="app-panel" id="candidates" style="margin-top: 22px;">
+            <div class="app-panel__header"><h2>Кандидаты</h2><span class="status" th:text="${responses.size() + ' отклика'}">2 отклика</span></div>
+            <div class="record-list">
+                <p th:if="${responses.isEmpty()}" class="record">Откликов пока нет.</p>
+                <article th:each="r : ${responses}" class="record">
+                    <div class="record__head">
+                        <div>
+                            <h3 th:text="${r.candidate != null ? r.candidate.name : 'Кандидат'}">Кандидат</h3>
+                            <p th:text="${r.candidate != null ? r.candidate.email : ''}">email</p>
+                            <p><strong th:text="${r.vacancy != null ? r.vacancy.title : ''}">Вакансия</strong></p>
+                        </div>
+                        <th:block th:switch="${r.app.status.name()}">
+                            <span th:case="'APPLIED'" class="status">Новый отклик</span>
+                            <span th:case="'INTERVIEW_PENDING'" class="status">AI-интервью</span>
+                            <span th:case="'INTERVIEW_COMPLETED'" class="status">Интервью пройдено</span>
+                            <span th:case="'OFFER_GRANTED'" class="status">Оффер выдан</span>
+                            <span th:case="'VISA_PROCESSING'" class="status">Релокация и виза</span>
+                        </th:block>
                     </div>
-
-                    <th:block th:switch="${r.app.status.name()}">
-                        <span th:case="'APPLIED'" class="shrink-0 text-xs font-semibold bg-slate-100 text-slate-600 px-3 py-1.5 rounded-full">Откликнулся</span>
-                        <span th:case="'INTERVIEW_PENDING'" class="shrink-0 text-xs font-semibold bg-amber-100 text-amber-700 px-3 py-1.5 rounded-full">AI-интервью идёт</span>
-                        <span th:case="'INTERVIEW_COMPLETED'" class="shrink-0 text-xs font-semibold bg-blue-100 text-blue-700 px-3 py-1.5 rounded-full">Интервью пройдено</span>
-                        <span th:case="'OFFER_GRANTED'" class="shrink-0 text-xs font-semibold bg-emerald-100 text-emerald-700 px-3 py-1.5 rounded-full">Offer выдан</span>
-                        <span th:case="'VISA_PROCESSING'" class="shrink-0 text-xs font-semibold bg-purple-100 text-purple-700 px-3 py-1.5 rounded-full">Визовое сопровождение</span>
-                    </th:block>
-                </div>
-
-                <!-- Отчёт AI -->
-                <div th:if="${r.result != null}" class="mt-4 bg-indigo-50 rounded-xl p-4 border border-indigo-100">
-                    <p class="text-xs font-semibold text-indigo-500 uppercase tracking-wide mb-2">Отчёт AI-агента</p>
-                    <p class="text-sm text-slate-800">
-                        <span class="font-semibold">Уровень языка:</span>
-                        <span th:text="${r.result.aiLanguageScore}">B2</span>
-                    </p>
-                    <p class="text-sm text-slate-800 mt-1">
-                        <span class="font-semibold">Комментарий:</span>
-                        <span th:text="${r.result.aiSoftSkillsComment}">Комментарий</span>
-                    </p>
-                    <a th:href="${r.result.interviewRecordUrl}" target="_blank"
-                       class="inline-block mt-2 text-xs text-indigo-600 hover:underline">
-                        ▶ Запись интервью
-                    </a>
-                </div>
-                <p th:if="${r.result == null}" class="mt-4 text-sm text-slate-400">
-                    Кандидат ещё не прошёл AI-интервью.
-                </p>
-
-                <!-- Кнопка оффера -->
-                <form th:if="${r.app.status.name() == 'INTERVIEW_COMPLETED'}"
-                      th:action="@{'/employer/applications/' + ${r.app.id} + '/offer'}" method="post" class="mt-4">
-                    <button type="submit"
-                            class="bg-emerald-600 text-white text-sm font-semibold px-5 py-2.5 rounded-lg hover:bg-emerald-700 transition">
-                        ✓ Выдать Job Offer
-                    </button>
-                </form>
+                    <div th:if="${r.result != null}" class="ai-report">
+                        <div class="ai-report__label">AI-отчёт AioraHub</div>
+                        <p><strong>Уровень языка:</strong> <span th:text="${r.result.aiLanguageScore}">B2</span></p>
+                        <p><strong>Комментарий:</strong> <span th:text="${r.result.aiSoftSkillsComment}">Комментарий</span></p>
+                        <a th:href="${r.result.interviewRecordUrl}" target="_blank" rel="noopener" style="color: var(--teal); font-size: 12px; font-weight: 800;">Открыть запись интервью</a>
+                    </div>
+                    <p th:if="${r.result == null}">AI-интервью ещё не завершено.</p>
+                    <form th:if="${r.app.status.name() == 'INTERVIEW_COMPLETED'}" th:action="@{'/employer/applications/' + ${r.app.id} + '/offer'}" method="post" style="margin-top: 15px;">
+                        <button type="submit" class="button button--primary">Выдать Job Offer</button>
+                    </form>
+                </article>
             </div>
-        </div>
-    </section>
-
-</main>
-
+        </section>
+    </main>
+</div>
 </body>
 </html>
