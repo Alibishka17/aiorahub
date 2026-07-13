@@ -44,7 +44,7 @@ mvn spring-boot:run
 - DNS управляется Cloudflare.
 - Инструкции по сборке, выкладке, rollback и проверке: [`docs/production-runbook.md`](docs/production-runbook.md).
 
-Данные аккаунтов, аналитики и процесса найма сохраняются в PostgreSQL, а CV — в `/var/lib/aiorahub/uploads`. AI-интервью запускаются через защищённый service-to-service API HRme; AioraHub не создаёт фиктивные результаты. Защищённое хранилище визовых документов подключается отдельной интеграцией.
+Данные аккаунтов, аналитики и процесса найма сохраняются в PostgreSQL, а CV — в `/var/lib/aiorahub/uploads`. AI-интервью запускаются через защищённый service-to-service API HRme; AIOraHub не создаёт фиктивные результаты. Защищённое хранилище визовых документов подключается отдельной интеграцией.
 
 ## Структура
 
