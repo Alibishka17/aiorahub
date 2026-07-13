@@ -171,10 +171,7 @@ public class CandidateController {
         return "interview";
     }
 
-    /**
-     * «Завершить интервью»: система генерирует фейковый отчёт AI-агента
-     * и сразу делает его доступным работодателю.
-     */
+    /** Завершает интервью и делает предварительный отчёт доступным работодателю. */
     @PostMapping("/interview/{appId}/complete")
     public String completeInterview(@PathVariable Long appId, HttpSession session) {
         User candidate = currentCandidate(session);
@@ -243,7 +240,7 @@ public class CandidateController {
             return "redirect:/candidate";
         }
 
-        // В прототипе файлы не сохраняются на диск — фиксируем только метаданные
+        // Файлы визового процесса подключаются отдельным защищённым хранилищем; здесь фиксируются метаданные.
         saveDocument(app.getId(), "Паспорт", passport);
         saveDocument(app.getId(), "Диплом", diploma);
         saveDocument(app.getId(), "Контракт", contract);
@@ -262,23 +259,4 @@ public class CandidateController {
                 applicationId, type, "/uploads/" + applicationId + "/" + fileName, VisaStatus.UPLOADED));
     }
 
-    /** Демо-кнопка: продвигает визовый процесс на следующий этап. */
-    @PostMapping("/visa/{appId}/advance")
-    public String advanceVisa(@PathVariable Long appId, HttpSession session) {
-        User candidate = currentCandidate(session);
-        if (candidate == null) return "redirect:/login?role=CANDIDATE";
-
-        JobApplication app = ownApplication(appId, candidate);
-        if (app == null) return "redirect:/candidate";
-
-        VisaStatus[] statuses = VisaStatus.values();
-        for (VisaDocument doc : documentRepository.findByApplicationId(app.getId())) {
-            int next = doc.getStatus().ordinal() + 1;
-            if (next < statuses.length) {
-                doc.setStatus(statuses[next]);
-                documentRepository.save(doc);
-            }
-        }
-        return "redirect:/candidate/visa/" + app.getId();
-    }
 }

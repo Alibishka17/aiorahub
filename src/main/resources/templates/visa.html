@@ -108,13 +108,9 @@
             </li>
         </ul>
 
-        <!-- Демо-кнопка продвижения процесса -->
-        <form th:if="${step < 4}" th:action="@{'/candidate/visa/' + ${app.id} + '/advance'}" method="post" class="mt-6">
-            <button type="submit"
-                    class="w-full border-2 border-dashed border-purple-300 text-purple-700 font-semibold rounded-lg py-3 hover:bg-purple-50 transition">
-                ⏩ Обновить статус (демо: следующий этап)
-            </button>
-        </form>
+        <p th:if="${step < 4}" class="mt-6 text-sm text-slate-500">
+            Следующий статус появится после проверки документов командой сопровождения.
+        </p>
     </div>
 
 </main>

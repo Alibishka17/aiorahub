@@ -5,14 +5,15 @@ import com.truehire.model.*;
 import com.truehire.repository.*;
 import com.truehire.service.PasswordService;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 /**
- * Mock-данные при старте, чтобы демо выглядело «живым»:
- * работодатель с тремя вакансиями и кандидат Anna,
- * которая уже прошла AI-интервью (видна в откликах работодателя).
+ * Локальные стартовые записи: работодатель с тремя вакансиями и кандидат Anna.
+ * Production никогда не создаёт пользователей или вакансии автоматически.
  */
 @Component
+@Profile("!prod")
 public class DataInitializer implements CommandLineRunner {
 
     private final UserRepository userRepository;
