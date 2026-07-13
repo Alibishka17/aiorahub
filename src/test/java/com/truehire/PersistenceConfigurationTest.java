@@ -1,6 +1,5 @@
 package com.truehire;
 
-import com.truehire.config.DataInitializer;
 import com.truehire.repository.InterviewResultRepository;
 import com.truehire.repository.JobApplicationRepository;
 import com.truehire.repository.JobVacancyRepository;
@@ -19,9 +18,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 class PersistenceConfigurationTest {
 
     @Autowired
-    private DataInitializer dataInitializer;
-
-    @Autowired
     private UserRepository userRepository;
 
     @Autowired
@@ -34,17 +30,10 @@ class PersistenceConfigurationTest {
     private InterviewResultRepository resultRepository;
 
     @Test
-    void flywaySchemaIsValidAndStarterSeedIsIdempotent() throws Exception {
-        assertThat(userRepository.count()).isEqualTo(3);
-        assertThat(vacancyRepository.count()).isEqualTo(3);
-        assertThat(applicationRepository.count()).isEqualTo(1);
-        assertThat(resultRepository.count()).isEqualTo(1);
-
-        dataInitializer.run();
-
-        assertThat(userRepository.count()).isEqualTo(3);
-        assertThat(vacancyRepository.count()).isEqualTo(3);
-        assertThat(applicationRepository.count()).isEqualTo(1);
-        assertThat(resultRepository.count()).isEqualTo(1);
+    void flywaySchemaIsValidAndStartsWithoutMockData() {
+        assertThat(userRepository.count()).isZero();
+        assertThat(vacancyRepository.count()).isZero();
+        assertThat(applicationRepository.count()).isZero();
+        assertThat(resultRepository.count()).isZero();
     }
 }

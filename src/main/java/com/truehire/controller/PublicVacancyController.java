@@ -1,13 +1,10 @@
 package com.truehire.controller;
 
-import com.truehire.model.ApplicationStatus;
-import com.truehire.model.InterviewResult;
 import com.truehire.model.JobApplication;
 import com.truehire.model.JobVacancy;
 import com.truehire.model.Role;
 import com.truehire.model.User;
 import com.truehire.model.VacancyStatus;
-import com.truehire.repository.InterviewResultRepository;
 import com.truehire.repository.JobApplicationRepository;
 import com.truehire.repository.JobVacancyRepository;
 import com.truehire.repository.UserRepository;
@@ -33,16 +30,13 @@ public class PublicVacancyController {
 
     private final JobVacancyRepository vacancyRepository;
     private final JobApplicationRepository applicationRepository;
-    private final InterviewResultRepository resultRepository;
     private final UserRepository userRepository;
 
     public PublicVacancyController(JobVacancyRepository vacancyRepository,
                                    JobApplicationRepository applicationRepository,
-                                   InterviewResultRepository resultRepository,
                                    UserRepository userRepository) {
         this.vacancyRepository = vacancyRepository;
         this.applicationRepository = applicationRepository;
-        this.resultRepository = resultRepository;
         this.userRepository = userRepository;
     }
 
@@ -133,42 +127,15 @@ public class PublicVacancyController {
                 whatsappEnabled,
                 token);
         applicationRepository.save(application);
-        return "redirect:/guest/interview/" + token;
+        return "redirect:/guest/application/" + token;
     }
 
-    @GetMapping("/guest/interview/{token}")
-    public String interview(@PathVariable String token, Model model) {
+    @GetMapping("/guest/application/{token}")
+    public String applicationConfirmation(@PathVariable String token, Model model) {
         JobApplication application = guestApplication(token);
-        if (application.getStatus() == ApplicationStatus.INTERVIEW_COMPLETED) {
-            model.addAttribute("guestApplication", application);
-            model.addAttribute("vacancy", vacancyRepository.findById(application.getVacancyId()).orElse(null));
-            return "guest-complete";
-        }
         model.addAttribute("guestApplication", application);
         model.addAttribute("vacancy", vacancyRepository.findById(application.getVacancyId()).orElse(null));
-        return "guest-interview";
-    }
-
-    @PostMapping("/guest/interview/{token}/complete")
-    public String completeInterview(@PathVariable String token) {
-        JobApplication application = guestApplication(token);
-        if (application.getStatus() == ApplicationStatus.INTERVIEW_PENDING
-                && resultRepository.findByApplicationId(application.getId()).isEmpty()) {
-            InterviewResult result = new InterviewResult(
-                    application.getId(),
-                    "Оценка сформирована",
-                    "Ответы кандидата переданы работодателю для рассмотрения.",
-                    null,
-                    true);
-            result.setSummary("Кандидат завершил структурированное AI-интервью по вакансии.");
-            result.setTranscript("Транскрибация интервью будет добавлена подключённой системой интервью.");
-            result.setConclusion("Отклик и контактные данные доступны рекрутеру для принятия решения.");
-            resultRepository.save(result);
-
-            application.setStatus(ApplicationStatus.INTERVIEW_COMPLETED);
-            applicationRepository.save(application);
-        }
-        return "redirect:/guest/interview/" + token;
+        return "guest-complete";
     }
 
     private JobVacancy publishedVacancy(Long id) {

@@ -25,7 +25,6 @@
             <a href="#overview">Обзор</a>
             <a href="#vacancies" class="active">Вакансии</a>
             <a href="#candidates">Кандидаты</a>
-            <span>Оценка</span><span>Интервью</span><span>Офферы</span><span>Релокация</span>
         </nav>
     </aside>
     <main class="app-main">
@@ -110,9 +109,9 @@
                         <a th:if="${r.result.interviewRecordUrl != null}" th:href="${r.result.interviewRecordUrl}" target="_blank" rel="noopener" style="color: var(--teal); font-size: 12px; font-weight: 800;">Открыть запись интервью</a>
                     </div>
                     <p th:if="${r.result == null}">AI-интервью ещё не завершено.</p>
-                    <div th:if="${!r.registered && r.app.status.name() == 'INTERVIEW_COMPLETED'}" class="guest-contact-note">
+                    <div th:if="${!r.registered}" class="guest-contact-note">
                         <strong>Кандидат откликнулся без регистрации</strong>
-                        <p>Решение нужно отправить самостоятельно на указанную электронную почту.</p>
+                        <p>Связаться с кандидатом нужно самостоятельно по указанной электронной почте.</p>
                         <a th:href="${'mailto:' + r.email}" class="button button--primary">Написать кандидату</a>
                     </div>
                     <form th:if="${r.registered && r.app.status.name() == 'INTERVIEW_COMPLETED'}" th:action="@{'/employer/applications/' + ${r.app.id} + '/offer'}" method="post" class="confirm-form">

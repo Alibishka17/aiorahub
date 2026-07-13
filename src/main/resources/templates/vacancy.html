@@ -40,23 +40,22 @@
             </section>
         </article>
         <aside class="vacancy-apply-panel">
-            <h2>AI-интервью</h2>
+            <h2>Отклик на вакансию</h2>
             <div th:if="${currentUser == null}">
-                <p>Перед интервью укажите контакты. Личный кабинет создавать не обязательно.</p>
-                <a th:href="@{'/vacancies/' + ${vacancy.id} + '/apply'}" class="button button--primary button--full">Пройти AI-интервью</a>
+                <p>Укажите контакты. Личный кабинет создавать не обязательно.</p>
+                <a th:href="@{'/vacancies/' + ${vacancy.id} + '/apply'}" class="button button--primary button--full">Откликнуться</a>
                 <a href="/register?role=CANDIDATE" class="inline-link">Создать кабинет соискателя</a>
             </div>
             <div th:if="${candidate != null && candidateApplication == null}">
-                <p>Ваш профиль уже заполнен. Интервью откроется сразу после подтверждения.</p>
+                <p>Ваш профиль уже заполнен. Контакты будут переданы рекрутеру.</p>
                 <form th:action="@{'/candidate/apply/' + ${vacancy.id}}" method="post">
-                    <button type="submit" class="button button--primary button--full">Пройти AI-интервью</button>
+                    <button type="submit" class="button button--primary button--full">Откликнуться</button>
                 </form>
             </div>
             <div th:if="${candidateApplication != null && (candidateApplication.status.name() == 'APPLIED' || candidateApplication.status.name() == 'INTERVIEW_PENDING')}">
-                <p>Интервью по этой вакансии уже доступно.</p>
-                <form th:action="@{'/candidate/apply/' + ${vacancy.id}}" method="post">
-                    <button type="submit" class="button button--primary button--full" th:text="${candidateApplication.status.name() == 'INTERVIEW_PENDING' ? 'Вернуться к интервью' : 'Пройти AI-интервью'}">Пройти AI-интервью</button>
-                </form>
+                <span class="status">Отклик отправлен</span>
+                <p>Рекрутер получил ваши данные. AI-интервью появится здесь после подключения интервью-системы.</p>
+                <a href="/candidate" class="inline-link">Открыть мои отклики</a>
             </div>
             <div th:if="${candidateApplication != null && candidateApplication.status.name() == 'INTERVIEW_COMPLETED'}" class="vacancy-progress-note">
                 <span class="status">Интервью пройдено</span>

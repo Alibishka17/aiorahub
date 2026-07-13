@@ -63,7 +63,7 @@ public class JobApplication {
                                        String accessToken) {
         JobApplication application = new JobApplication();
         application.setVacancyId(vacancyId);
-        application.setStatus(ApplicationStatus.INTERVIEW_PENDING);
+        application.setStatus(ApplicationStatus.APPLIED);
         application.setCreatedAt(LocalDateTime.now());
         application.setGuestFirstName(firstName);
         application.setGuestLastName(lastName);

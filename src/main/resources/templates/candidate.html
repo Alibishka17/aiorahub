@@ -19,14 +19,14 @@
 <div class="app-layout">
     <aside class="app-sidebar">
         <nav aria-label="Навигация специалиста">
-            <a href="#profile">Мой профиль</a><a href="#vacancies" class="active">Вакансии</a><a href="#history">Мои отклики</a><span>AI-интервью</span><span>Офферы</span><span>Документы</span>
+            <a href="#profile">Мой профиль</a><a href="#vacancies" class="active">Вакансии</a><a href="#history">Мои отклики</a>
         </nav>
     </aside>
     <main class="app-main" id="vacancies">
         <div class="app-heading">
             <div>
                 <h1>Вакансии</h1>
-                <p>Откройте вакансию, изучите полное описание и перейдите к AI-интервью.</p>
+                <p>Откройте вакансию, изучите полное описание и отправьте отклик работодателю.</p>
             </div>
         </div>
         <section class="profile-band" id="profile">
@@ -55,7 +55,7 @@
                 </div>
                 <div class="candidate-vacancy-card__meta">
                     <th:block th:if="${app != null}" th:switch="${app.status.name()}">
-                        <span th:case="'APPLIED'" class="status">AI-интервью</span>
+                        <span th:case="'APPLIED'" class="status">Отклик отправлен</span>
                         <span th:case="'INTERVIEW_PENDING'" class="status">Интервью начато</span>
                         <span th:case="'INTERVIEW_COMPLETED'" class="status">Интервью пройдено</span>
                         <span th:case="'OFFER_GRANTED'" class="status">Получен оффер</span>
@@ -68,7 +68,7 @@
         <section class="app-panel candidate-history" id="history">
             <div class="app-panel__header"><h2>Мои отклики</h2><span class="status" th:text="${applications.size() + ' всего'}">0 всего</span></div>
             <div class="record-list">
-                <p th:if="${applications.isEmpty()}" class="record">Вы ещё не проходили интервью по вакансиям.</p>
+                <p th:if="${applications.isEmpty()}" class="record">Вы ещё не откликались на вакансии.</p>
                 <article th:each="app : ${applications}" th:with="v=${vacancyById[app.vacancyId]}, result=${interviewResults[app.id]}" class="record">
                     <div class="record__head">
                         <div>
@@ -76,7 +76,7 @@
                             <a th:if="${v != null}" th:href="@{'/vacancies/' + ${v.id}}" class="inline-link">Открыть вакансию</a>
                         </div>
                         <th:block th:switch="${app.status.name()}">
-                            <span th:case="'APPLIED'" class="status">AI-интервью</span>
+                            <span th:case="'APPLIED'" class="status">Отклик отправлен</span>
                             <span th:case="'INTERVIEW_PENDING'" class="status">Интервью начато</span>
                             <span th:case="'INTERVIEW_COMPLETED'" class="status">Интервью пройдено</span>
                             <span th:case="'OFFER_GRANTED'" class="status">Получен оффер</span>

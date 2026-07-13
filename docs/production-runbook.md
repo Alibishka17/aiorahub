@@ -13,7 +13,7 @@
 - Runtime secrets: `/etc/aiorahub/aiorahub.env`, owned by `root:aiorahub`, mode `0640`.
 - DNS: Cloudflare authoritative nameservers.
 
-Flyway owns the database schema. Hibernate validates it at startup and must not use `create` or `create-drop` in production. Local starter records are disabled whenever the `prod` profile is active.
+Flyway owns the database schema. Hibernate validates it at startup and must not use `create` or `create-drop` in production. Application startup never seeds users, vacancies, applications, or interview results.
 
 ## DNS
 

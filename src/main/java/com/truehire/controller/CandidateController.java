@@ -22,25 +22,12 @@ import java.nio.charset.StandardCharsets;
 @RequestMapping("/candidate")
 public class CandidateController {
 
-    private static final String[] LANGUAGE_LEVELS = {
-            "Немецкий: B1 (Intermediate)",
-            "Немецкий: B2 (Upper-Intermediate)",
-            "Немецкий: C1 (Advanced)"
-    };
-
-    private static final String[] AI_COMMENTS = {
-            "Кандидат адекватен, отвечает по существу, опыт работы подтверждён в ходе беседы. Рекомендован к найму.",
-            "Кандидат спокоен и мотивирован, релокация в Германию осознанная. Опыт соответствует заявленному в резюме.",
-            "Коммуникация уверенная, без противоречий в ответах. Soft skills на хорошем уровне, готов приступить в течение 2 месяцев."
-    };
-
     private final UserRepository userRepository;
     private final JobVacancyRepository vacancyRepository;
     private final JobApplicationRepository applicationRepository;
     private final InterviewResultRepository resultRepository;
     private final VisaDocumentRepository documentRepository;
     private final CvStorageService cvStorageService;
-    private final Random random = new Random();
 
     public CandidateController(UserRepository userRepository,
                                JobVacancyRepository vacancyRepository,
@@ -154,72 +141,10 @@ public class CandidateController {
             if (vacancy.getStatus() != VacancyStatus.PUBLISHED) {
                 return "redirect:/vacancies";
             }
-            application = applicationRepository.save(new JobApplication(
-                    vacancyId, candidate.getId(), ApplicationStatus.INTERVIEW_PENDING));
+            applicationRepository.save(new JobApplication(
+                    vacancyId, candidate.getId(), ApplicationStatus.APPLIED));
         }
-        if (application.getStatus() == ApplicationStatus.APPLIED) {
-            application.setStatus(ApplicationStatus.INTERVIEW_PENDING);
-            applicationRepository.save(application);
-        }
-        if (application.getStatus() != ApplicationStatus.INTERVIEW_PENDING) {
-            return "redirect:/vacancies/" + vacancyId;
-        }
-        return "redirect:/candidate/interview/" + application.getId();
-    }
-
-    // ---------- AI-интервью ----------
-
-    @GetMapping("/interview/{appId}")
-    public String interview(@PathVariable Long appId, HttpSession session, Model model) {
-        User candidate = currentCandidate(session);
-        if (candidate == null) return "redirect:/login?role=CANDIDATE";
-
-        JobApplication app = ownApplication(appId, candidate);
-        if (app == null) return "redirect:/candidate";
-
-        if (app.getStatus() != ApplicationStatus.APPLIED
-                && app.getStatus() != ApplicationStatus.INTERVIEW_PENDING) {
-            return "redirect:/vacancies/" + app.getVacancyId();
-        }
-
-        if (app.getStatus() == ApplicationStatus.APPLIED) {
-            app.setStatus(ApplicationStatus.INTERVIEW_PENDING);
-            applicationRepository.save(app);
-        }
-
-        model.addAttribute("user", candidate);
-        model.addAttribute("app", app);
-        model.addAttribute("vacancy", vacancyRepository.findById(app.getVacancyId()).orElse(null));
-        return "interview";
-    }
-
-    /** Завершает интервью и делает предварительный отчёт доступным работодателю. */
-    @PostMapping("/interview/{appId}/complete")
-    public String completeInterview(@PathVariable Long appId, HttpSession session) {
-        User candidate = currentCandidate(session);
-        if (candidate == null) return "redirect:/login?role=CANDIDATE";
-
-        JobApplication app = ownApplication(appId, candidate);
-        if (app == null) return "redirect:/candidate";
-
-        if (resultRepository.findByApplicationId(app.getId()).isEmpty()) {
-            String languageScore = LANGUAGE_LEVELS[random.nextInt(LANGUAGE_LEVELS.length)];
-            String comment = AI_COMMENTS[random.nextInt(AI_COMMENTS.length)];
-            String recordUrl = "https://meet.google.com/rec/truehire-" + app.getId();
-
-            InterviewResult result = new InterviewResult(app.getId(), languageScore, comment, recordUrl, true);
-            result.setSummary("Кандидат подтвердил опыт, мотивацию и готовность к следующему этапу отбора.");
-            result.setTranscript("AI-интервьюер: Расскажите о вашем профессиональном опыте.\n"
-                    + candidate.getName() + ": Я описал ключевые проекты и свою роль в них.\n"
-                    + "AI-интервьюер: Почему вам интересна эта вакансия?\n"
-                    + candidate.getName() + ": Мой опыт соответствует требованиям, и я готов развиваться в международной команде.");
-            result.setConclusion(comment);
-            resultRepository.save(result);
-
-            app.setStatus(ApplicationStatus.INTERVIEW_COMPLETED);
-            applicationRepository.save(app);
-        }
-        return "redirect:/candidate";
+        return "redirect:/candidate#history";
     }
 
     // ---------- Визовое сопровождение ----------
