@@ -94,6 +94,8 @@ public class CandidateController {
 
         model.addAttribute("user", candidate);
         model.addAttribute("vacancies", new ArrayList<>(vacancyMap.values()));
+        model.addAttribute("applications", applications);
+        model.addAttribute("vacancyById", vacancyMap);
         model.addAttribute("myApps", myApplications);
         model.addAttribute("interviewResults", interviewResults);
         return "candidate";
@@ -140,14 +142,29 @@ public class CandidateController {
         User candidate = currentCandidate(session);
         if (candidate == null) return "redirect:/login?role=CANDIDATE";
 
-        boolean alreadyApplied = applicationRepository
-                .findByVacancyIdAndCandidateId(vacancyId, candidate.getId()).isPresent();
         JobVacancy vacancy = vacancyRepository.findById(vacancyId).orElse(null);
-        if (!alreadyApplied && vacancy != null && vacancy.getStatus() == VacancyStatus.PUBLISHED) {
-            applicationRepository.save(
-                    new JobApplication(vacancyId, candidate.getId(), ApplicationStatus.APPLIED));
+        if (vacancy == null) {
+            return "redirect:/vacancies";
         }
-        return "redirect:/candidate";
+
+        JobApplication application = applicationRepository
+                .findByVacancyIdAndCandidateId(vacancyId, candidate.getId())
+                .orElse(null);
+        if (application == null) {
+            if (vacancy.getStatus() != VacancyStatus.PUBLISHED) {
+                return "redirect:/vacancies";
+            }
+            application = applicationRepository.save(new JobApplication(
+                    vacancyId, candidate.getId(), ApplicationStatus.INTERVIEW_PENDING));
+        }
+        if (application.getStatus() == ApplicationStatus.APPLIED) {
+            application.setStatus(ApplicationStatus.INTERVIEW_PENDING);
+            applicationRepository.save(application);
+        }
+        if (application.getStatus() != ApplicationStatus.INTERVIEW_PENDING) {
+            return "redirect:/vacancies/" + vacancyId;
+        }
+        return "redirect:/candidate/interview/" + application.getId();
     }
 
     // ---------- AI-интервью ----------
@@ -159,6 +176,11 @@ public class CandidateController {
 
         JobApplication app = ownApplication(appId, candidate);
         if (app == null) return "redirect:/candidate";
+
+        if (app.getStatus() != ApplicationStatus.APPLIED
+                && app.getStatus() != ApplicationStatus.INTERVIEW_PENDING) {
+            return "redirect:/vacancies/" + app.getVacancyId();
+        }
 
         if (app.getStatus() == ApplicationStatus.APPLIED) {
             app.setStatus(ApplicationStatus.INTERVIEW_PENDING);

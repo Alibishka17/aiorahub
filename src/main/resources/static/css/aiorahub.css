@@ -684,6 +684,80 @@ a {
     border-radius: 7px;
 }
 
+.candidate-vacancy-list {
+    display: grid;
+    gap: 12px;
+}
+
+.candidate-vacancy-card {
+    min-height: 116px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 24px;
+    align-items: center;
+    padding: 20px 22px;
+    color: var(--ink);
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    text-decoration: none;
+    transition: border-color 160ms ease, transform 160ms ease, box-shadow 160ms ease;
+}
+
+.candidate-vacancy-card:hover {
+    transform: translateY(-1px);
+    border-color: #aab8c2;
+    box-shadow: 0 8px 24px rgba(23, 33, 38, 0.07);
+}
+
+.candidate-vacancy-card h3 {
+    margin: 0;
+    font-size: 17px;
+}
+
+.candidate-vacancy-card p {
+    display: -webkit-box;
+    overflow: hidden;
+    margin: 9px 0 0;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.6;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+}
+
+.candidate-vacancy-card__meta {
+    min-width: 132px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    flex-direction: column;
+    gap: 9px;
+}
+
+.candidate-vacancy-card__action {
+    color: var(--blue);
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.candidate-history {
+    margin-top: 24px;
+}
+
+.candidate-history .inline-link {
+    display: inline-block;
+    margin-top: 7px;
+    font-size: 11px;
+}
+
+.candidate-history__action {
+    width: fit-content;
+    min-height: 40px;
+    margin-top: 16px;
+    font-size: 12px;
+}
+
 .app-input {
     width: 100%;
     padding: 11px 12px;
@@ -1213,6 +1287,14 @@ a {
     text-align: center;
 }
 
+.vacancy-apply-panel form {
+    margin: 0;
+}
+
+.vacancy-progress-note p {
+    margin-top: 14px;
+}
+
 .interview-page {
     min-height: 100vh;
     background: #f3f5f6;
@@ -1457,6 +1539,18 @@ a {
         grid-template-columns: 1fr;
         gap: 20px;
         padding: 22px;
+    }
+
+    .candidate-vacancy-card {
+        min-height: 0;
+        grid-template-columns: 1fr;
+        gap: 14px;
+        padding: 18px;
+    }
+
+    .candidate-vacancy-card__meta {
+        min-width: 0;
+        align-items: flex-start;
     }
 
     .vacancy-card__action .button {

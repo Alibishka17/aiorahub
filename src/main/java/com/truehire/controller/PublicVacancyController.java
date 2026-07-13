@@ -4,10 +4,14 @@ import com.truehire.model.ApplicationStatus;
 import com.truehire.model.InterviewResult;
 import com.truehire.model.JobApplication;
 import com.truehire.model.JobVacancy;
+import com.truehire.model.Role;
+import com.truehire.model.User;
 import com.truehire.model.VacancyStatus;
 import com.truehire.repository.InterviewResultRepository;
 import com.truehire.repository.JobApplicationRepository;
 import com.truehire.repository.JobVacancyRepository;
+import com.truehire.repository.UserRepository;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -30,13 +34,16 @@ public class PublicVacancyController {
     private final JobVacancyRepository vacancyRepository;
     private final JobApplicationRepository applicationRepository;
     private final InterviewResultRepository resultRepository;
+    private final UserRepository userRepository;
 
     public PublicVacancyController(JobVacancyRepository vacancyRepository,
                                    JobApplicationRepository applicationRepository,
-                                   InterviewResultRepository resultRepository) {
+                                   InterviewResultRepository resultRepository,
+                                   UserRepository userRepository) {
         this.vacancyRepository = vacancyRepository;
         this.applicationRepository = applicationRepository;
         this.resultRepository = resultRepository;
+        this.userRepository = userRepository;
     }
 
     @GetMapping("/vacancies")
@@ -46,13 +53,39 @@ public class PublicVacancyController {
     }
 
     @GetMapping("/vacancies/{id}")
-    public String vacancy(@PathVariable Long id, Model model) {
-        model.addAttribute("vacancy", publishedVacancy(id));
+    public String vacancy(@PathVariable Long id, HttpSession session, Model model) {
+        JobVacancy vacancy = vacancyRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        User currentUser = currentUser(session);
+        JobApplication candidateApplication = null;
+        if (currentUser != null && currentUser.getRole() == Role.CANDIDATE) {
+            candidateApplication = applicationRepository
+                    .findByVacancyIdAndCandidateId(id, currentUser.getId())
+                    .orElse(null);
+        }
+        boolean canView = vacancy.getStatus() == VacancyStatus.PUBLISHED
+                || candidateApplication != null
+                || (currentUser != null && currentUser.getRole() == Role.EMPLOYER
+                && currentUser.getId().equals(vacancy.getEmployerId()));
+        if (!canView) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+        model.addAttribute("vacancy", vacancy);
+        model.addAttribute("currentUser", currentUser);
+        if (currentUser != null && currentUser.getRole() == Role.CANDIDATE) {
+            model.addAttribute("candidate", currentUser);
+            if (candidateApplication != null) {
+                model.addAttribute("candidateApplication", candidateApplication);
+            }
+        }
         return "vacancy";
     }
 
     @GetMapping("/vacancies/{id}/apply")
-    public String applicationForm(@PathVariable Long id, Model model) {
+    public String applicationForm(@PathVariable Long id, HttpSession session, Model model) {
+        if (currentUser(session) != null) {
+            return "redirect:/vacancies/" + id;
+        }
         model.addAttribute("vacancy", publishedVacancy(id));
         return "guest-apply";
     }
@@ -65,7 +98,11 @@ public class PublicVacancyController {
                         @RequestParam(defaultValue = "false") boolean telegramEnabled,
                         @RequestParam(defaultValue = "false") boolean whatsappEnabled,
                         @RequestParam String email,
+                        HttpSession session,
                         Model model) {
+        if (currentUser(session) != null) {
+            return "redirect:/vacancies/" + id;
+        }
         JobVacancy vacancy = publishedVacancy(id);
         String normalizedEmail = normalizeEmail(email);
         String error = validateContact(firstName, lastName, phone, normalizedEmail);
@@ -174,5 +211,13 @@ public class PublicVacancyController {
 
     private String clean(String value) {
         return value == null ? "" : value.trim();
+    }
+
+    private User currentUser(HttpSession session) {
+        Object userId = session.getAttribute("userId");
+        if (!(userId instanceof Long id)) {
+            return null;
+        }
+        return userRepository.findById(id).orElse(null);
     }
 }

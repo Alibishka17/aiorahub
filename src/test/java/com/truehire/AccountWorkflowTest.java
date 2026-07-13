@@ -255,4 +255,64 @@ class AccountWorkflowTest {
                 .findByVacancyIdAndGuestEmailIgnoreCase(vacancy.getId(), "guest-invalid-phone@example.com"))
                 .isEmpty();
     }
+
+    @Test
+    void registeredCandidateOpensVacancyAndStartsInterviewWithoutGuestForm() throws Exception {
+        MvcResult registration = mockMvc.perform(post("/register").with(csrf())
+                        .param("firstName", "Direct")
+                        .param("lastName", "Candidate")
+                        .param("phone", "+77002223344")
+                        .param("email", "direct-candidate@example.com")
+                        .param("password", "securePass123")
+                        .param("role", "CANDIDATE"))
+                .andReturn();
+        MockHttpSession session = (MockHttpSession) registration.getRequest().getSession(false);
+        User candidate = userRepository.findByEmailIgnoreCase("direct-candidate@example.com").orElseThrow();
+        JobVacancy vacancy = vacancyRepository.findByStatus(VacancyStatus.PUBLISHED).stream()
+                .findFirst()
+                .orElseThrow();
+
+        mockMvc.perform(get("/candidate").session(session))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Открыть вакансию")));
+
+        mockMvc.perform(get("/vacancies/{id}", vacancy.getId()).session(session))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Пройти AI-интервью")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Ваш профиль уже заполнен")));
+
+        mockMvc.perform(get("/vacancies/{id}/apply", vacancy.getId()).session(session))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/vacancies/" + vacancy.getId()));
+
+        MvcResult start = mockMvc.perform(post("/candidate/apply/{id}", vacancy.getId())
+                        .with(csrf()).session(session))
+                .andExpect(status().is3xxRedirection())
+                .andReturn();
+
+        JobApplication application = applicationRepository
+                .findByVacancyIdAndCandidateId(vacancy.getId(), candidate.getId())
+                .orElseThrow();
+        assertThat(application.getStatus()).isEqualTo(ApplicationStatus.INTERVIEW_PENDING);
+        assertThat(start.getResponse().getRedirectedUrl())
+                .isEqualTo("/candidate/interview/" + application.getId());
+
+        mockMvc.perform(post("/candidate/apply/{id}", vacancy.getId()).with(csrf()).session(session))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/candidate/interview/" + application.getId()));
+        assertThat(applicationRepository.findByCandidateId(candidate.getId()))
+                .filteredOn(app -> app.getVacancyId().equals(vacancy.getId()))
+                .hasSize(1);
+
+        mockMvc.perform(post("/candidate/interview/{id}/complete", application.getId())
+                        .with(csrf()).session(session))
+                .andExpect(status().is3xxRedirection());
+
+        mockMvc.perform(get("/candidate/interview/{id}", application.getId()).session(session))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/vacancies/" + vacancy.getId()));
+        mockMvc.perform(get("/vacancies/{id}", vacancy.getId()).session(session))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Интервью пройдено")));
+    }
 }

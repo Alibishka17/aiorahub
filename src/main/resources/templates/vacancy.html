@@ -16,7 +16,9 @@
             <span class="brand-name"><span class="brand-ai">AI</span><span>Ora</span><span class="brand-hub">Hub</span></span>
         </a>
         <a href="/vacancies" class="header-back">К списку вакансий</a>
-        <a href="/login" class="button button--primary">Войти в кабинет</a>
+        <a th:if="${currentUser == null}" href="/login" class="button button--primary">Войти в кабинет</a>
+        <a th:if="${currentUser != null && currentUser.role.name() == 'CANDIDATE'}" href="/candidate" class="button button--primary">Мой кабинет</a>
+        <a th:if="${currentUser != null && currentUser.role.name() == 'EMPLOYER'}" href="/employer" class="button button--primary">Кабинет работодателя</a>
     </div>
 </header>
 <main class="vacancy-detail">
@@ -38,10 +40,38 @@
             </section>
         </article>
         <aside class="vacancy-apply-panel">
-            <h2>Откликнуться</h2>
-            <p>Оставьте контакты и перейдите к AI-интервью. Кабинет создавать не обязательно.</p>
-            <a th:href="@{'/vacancies/' + ${vacancy.id} + '/apply'}" class="button button--primary button--full">Откликнуться и пройти интервью</a>
-            <a href="/register?role=CANDIDATE" class="inline-link">Создать кабинет соискателя</a>
+            <h2>AI-интервью</h2>
+            <div th:if="${currentUser == null}">
+                <p>Перед интервью укажите контакты. Личный кабинет создавать не обязательно.</p>
+                <a th:href="@{'/vacancies/' + ${vacancy.id} + '/apply'}" class="button button--primary button--full">Пройти AI-интервью</a>
+                <a href="/register?role=CANDIDATE" class="inline-link">Создать кабинет соискателя</a>
+            </div>
+            <div th:if="${candidate != null && candidateApplication == null}">
+                <p>Ваш профиль уже заполнен. Интервью откроется сразу после подтверждения.</p>
+                <form th:action="@{'/candidate/apply/' + ${vacancy.id}}" method="post">
+                    <button type="submit" class="button button--primary button--full">Пройти AI-интервью</button>
+                </form>
+            </div>
+            <div th:if="${candidateApplication != null && (candidateApplication.status.name() == 'APPLIED' || candidateApplication.status.name() == 'INTERVIEW_PENDING')}">
+                <p>Интервью по этой вакансии уже доступно.</p>
+                <form th:action="@{'/candidate/apply/' + ${vacancy.id}}" method="post">
+                    <button type="submit" class="button button--primary button--full" th:text="${candidateApplication.status.name() == 'INTERVIEW_PENDING' ? 'Вернуться к интервью' : 'Пройти AI-интервью'}">Пройти AI-интервью</button>
+                </form>
+            </div>
+            <div th:if="${candidateApplication != null && candidateApplication.status.name() == 'INTERVIEW_COMPLETED'}" class="vacancy-progress-note">
+                <span class="status">Интервью пройдено</span>
+                <p>AI-отчёт передан работодателю. Решение появится в личном кабинете.</p>
+                <a href="/candidate" class="inline-link">Открыть мои отклики</a>
+            </div>
+            <div th:if="${candidateApplication != null && (candidateApplication.status.name() == 'OFFER_GRANTED' || candidateApplication.status.name() == 'VISA_PROCESSING')}" class="vacancy-progress-note">
+                <span class="status">Кандидат подтверждён</span>
+                <p>Следующий этап доступен в личном кабинете.</p>
+                <a href="/candidate" class="button button--secondary button--full">Открыть кабинет</a>
+            </div>
+            <div th:if="${currentUser != null && currentUser.role.name() == 'EMPLOYER'}">
+                <p>Управление этой вакансией и кандидатами находится в кабинете работодателя.</p>
+                <a href="/employer" class="button button--secondary button--full">Открыть кабинет</a>
+            </div>
         </aside>
     </div>
 </main>
