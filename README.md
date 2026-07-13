@@ -28,6 +28,15 @@ mvn spring-boot:run
 
 Авторизация упрощена намеренно: вход одной кнопкой под демо-пользователем нужной роли, id хранится в HTTP-сессии. Spring Security не используется.
 
+## Production
+
+- Домен: https://aiorahub.com
+- Сервер: DigitalOcean Droplet, Ubuntu, Nginx -> Spring Boot на `127.0.0.1:8080`.
+- DNS управляется Cloudflare.
+- Инструкции по сборке, выкладке, rollback и проверке: [`docs/production-runbook.md`](docs/production-runbook.md).
+
+Production остаётся демо-средой: H2 работает в памяти и полностью пересоздаётся при каждом перезапуске приложения.
+
 ## Структура
 
 ```
