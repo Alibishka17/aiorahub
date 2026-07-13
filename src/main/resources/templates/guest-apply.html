@@ -19,7 +19,7 @@
             <a th:href="@{'/vacancies/' + ${vacancy.id}}" class="header-back">Назад к вакансии</a>
             <span class="auth-kicker">Отклик без регистрации</span>
             <h1 th:text="${vacancy.title}">Вакансия</h1>
-            <p>После отправки откроется интервью. Аккаунт и личный кабинет не создаются.</p>
+            <p>После отправки работодатель получит ваши контакты. Аккаунт и личный кабинет не создаются.</p>
         </div>
         <div th:if="${error}" class="form-alert" th:text="${error}">Ошибка</div>
         <form th:action="@{'/vacancies/' + ${vacancy.id} + '/apply'}" method="post" class="app-form">
