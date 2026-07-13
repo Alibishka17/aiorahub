@@ -55,7 +55,8 @@ a {
 .brand-name {
     display: inline-flex;
     align-items: baseline;
-    gap: 5px;
+    gap: 0;
+    white-space: nowrap;
     font-size: 22px;
     line-height: 1;
     font-weight: 800;
@@ -342,7 +343,7 @@ a {
 .integration-screen img {
     display: block;
     width: 100%;
-    aspect-ratio: 1271 / 608;
+    aspect-ratio: 1705 / 922;
     object-fit: cover;
 }
 
