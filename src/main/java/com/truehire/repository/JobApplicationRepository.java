@@ -10,4 +10,6 @@ public interface JobApplicationRepository extends JpaRepository<JobApplication, 
     List<JobApplication> findByCandidateId(Long candidateId);
     List<JobApplication> findByVacancyIdIn(List<Long> vacancyIds);
     Optional<JobApplication> findByVacancyIdAndCandidateId(Long vacancyId, Long candidateId);
+    Optional<JobApplication> findByGuestAccessToken(String guestAccessToken);
+    Optional<JobApplication> findByVacancyIdAndGuestEmailIgnoreCase(Long vacancyId, String guestEmail);
 }

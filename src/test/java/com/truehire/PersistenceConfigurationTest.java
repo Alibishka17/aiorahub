@@ -34,7 +34,7 @@ class PersistenceConfigurationTest {
     private InterviewResultRepository resultRepository;
 
     @Test
-    void flywaySchemaIsValidAndDemoSeedIsIdempotent() throws Exception {
+    void flywaySchemaIsValidAndStarterSeedIsIdempotent() throws Exception {
         assertThat(userRepository.count()).isEqualTo(3);
         assertThat(vacancyRepository.count()).isEqualTo(3);
         assertThat(applicationRepository.count()).isEqualTo(1);

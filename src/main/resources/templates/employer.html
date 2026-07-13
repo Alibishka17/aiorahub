@@ -80,11 +80,12 @@
                 <article th:each="r : ${responses}" class="record">
                     <div class="record__head">
                         <div>
-                            <h3 th:text="${r.candidate != null ? r.candidate.name : 'Кандидат'}">Кандидат</h3>
-                            <p><strong>Почта:</strong> <a th:if="${r.candidate != null}" th:href="${'mailto:' + r.candidate.email}" th:text="${r.candidate.email}">email</a></p>
-                            <p th:if="${r.candidate != null && r.candidate.phone != null}"><strong>Телефон:</strong> <a th:href="${'tel:' + r.candidate.phone}" th:text="${r.candidate.phone}">телефон</a></p>
-                            <p th:if="${r.candidate != null && (r.candidate.telegramEnabled || r.candidate.whatsappEnabled)}" class="contact-tags">
-                                <span th:if="${r.candidate.telegramEnabled}">Telegram</span><span th:if="${r.candidate.whatsappEnabled}">WhatsApp</span>
+                            <h3 th:text="${r.displayName}">Кандидат</h3>
+                            <span th:if="${!r.registered}" class="status status--guest">Без регистрации</span>
+                            <p><strong>Почта:</strong> <a th:href="${'mailto:' + r.email}" th:text="${r.email}">email</a></p>
+                            <p th:if="${r.phone != null}"><strong>Телефон:</strong> <a th:href="${'tel:' + r.phone}" th:text="${r.phone}">телефон</a></p>
+                            <p th:if="${r.telegramEnabled || r.whatsappEnabled}" class="contact-tags">
+                                <span th:if="${r.telegramEnabled}">Telegram</span><span th:if="${r.whatsappEnabled}">WhatsApp</span>
                             </p>
                             <a th:if="${r.candidate != null && r.candidate.cvStorageKey != null}" th:href="@{'/employer/candidates/' + ${r.candidate.id} + '/cv'}" class="inline-link">Скачать CV</a>
                             <p><strong th:text="${r.vacancy != null ? r.vacancy.title : ''}">Вакансия</strong></p>
@@ -106,10 +107,15 @@
                             <div class="transcript"><strong>Транскрибация</strong><p th:text="${r.result.transcript != null ? r.result.transcript : 'Транскрибация пока не добавлена.'}">Текст интервью</p></div>
                             <div><strong>Заключение</strong><p th:text="${r.result.conclusion != null ? r.result.conclusion : r.result.aiSoftSkillsComment}">Заключение</p></div>
                         </details>
-                        <a th:href="${r.result.interviewRecordUrl}" target="_blank" rel="noopener" style="color: var(--teal); font-size: 12px; font-weight: 800;">Открыть запись интервью</a>
+                        <a th:if="${r.result.interviewRecordUrl != null}" th:href="${r.result.interviewRecordUrl}" target="_blank" rel="noopener" style="color: var(--teal); font-size: 12px; font-weight: 800;">Открыть запись интервью</a>
                     </div>
                     <p th:if="${r.result == null}">AI-интервью ещё не завершено.</p>
-                    <form th:if="${r.app.status.name() == 'INTERVIEW_COMPLETED'}" th:action="@{'/employer/applications/' + ${r.app.id} + '/offer'}" method="post" class="confirm-form">
+                    <div th:if="${!r.registered && r.app.status.name() == 'INTERVIEW_COMPLETED'}" class="guest-contact-note">
+                        <strong>Кандидат откликнулся без регистрации</strong>
+                        <p>Решение нужно отправить самостоятельно на указанную электронную почту.</p>
+                        <a th:href="${'mailto:' + r.email}" class="button button--primary">Написать кандидату</a>
+                    </div>
+                    <form th:if="${r.registered && r.app.status.name() == 'INTERVIEW_COMPLETED'}" th:action="@{'/employer/applications/' + ${r.app.id} + '/offer'}" method="post" class="confirm-form">
                         <label class="app-label" th:for="${'message-' + r.app.id}">Письмо кандидату</label>
                         <textarea class="app-input" th:id="${'message-' + r.app.id}" name="recruiterMessage" rows="3" required>Мы подтверждаем вашу кандидатуру и приглашаем перейти к следующему этапу. Свяжитесь с нами для согласования деталей.</textarea>
                         <button type="submit" class="button button--primary">Подтвердить кандидата</button>

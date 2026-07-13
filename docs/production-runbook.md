@@ -87,6 +87,7 @@ systemctl is-active aiorahub nginx
 curl -fsS http://127.0.0.1:8080/ >/dev/null
 sudo -u postgres psql -d aiorahub -Atc 'select count(*) from users;'
 curl -fsSI https://aiorahub.com/
+curl -fsSI https://aiorahub.com/vacancies
 curl -fsSI https://www.aiorahub.com/
 journalctl -u aiorahub -n 100 --no-pager
 ```
@@ -95,6 +96,7 @@ Expected public behavior:
 
 - HTTP redirects to `https://aiorahub.com`.
 - `https://aiorahub.com` returns `200`.
+- `https://aiorahub.com/vacancies` returns `200` and lists only published vacancies.
 - `https://www.aiorahub.com` redirects to the apex domain.
 - `/h2-console` is not exposed through Nginx.
 

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Отклик отправлен — AI Ora Hub</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/aiorahub.css">
+</head>
+<body class="aiora-app auth-page">
+<main class="auth-shell">
+    <a href="/" class="brand" aria-label="AI Ora Hub — главная">
+        <span class="brand-name"><span class="brand-ai">AI</span><span>Ora</span><span class="brand-hub">Hub</span></span>
+    </a>
+    <section class="auth-panel completion-panel">
+        <span class="completion-mark">Готово</span>
+        <h1>Отклик отправлен</h1>
+        <p>Интервью по вакансии <strong th:text="${vacancy != null ? vacancy.title : ''}">Вакансия</strong> завершено.</p>
+        <p>Рекрутер рассмотрит ответы и свяжется с вами по адресу <strong th:text="${guestApplication.guestEmail}">email@example.com</strong>.</p>
+        <a href="/vacancies" class="button button--secondary button--full">Вернуться к вакансиям</a>
+    </section>
+</main>
+</body>
+</html>

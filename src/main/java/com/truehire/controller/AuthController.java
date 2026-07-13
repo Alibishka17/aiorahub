@@ -18,8 +18,8 @@ import java.util.regex.Pattern;
 @Controller
 public class AuthController {
 
-    public static final String DEMO_EMPLOYER_EMAIL = "employer@truehire.io";
-    public static final String DEMO_CANDIDATE_EMAIL = "candidate@truehire.io";
+    public static final String STARTER_EMPLOYER_EMAIL = "employer@truehire.io";
+    public static final String STARTER_CANDIDATE_EMAIL = "candidate@truehire.io";
 
     private static final Pattern EMAIL = Pattern.compile("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$");
     private static final Pattern INTERNATIONAL_PHONE = Pattern.compile("^\\+[1-9]\\d{7,14}$");

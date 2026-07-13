@@ -66,7 +66,7 @@ public class CandidateController {
 
     private JobApplication ownApplication(Long appId, User candidate) {
         return applicationRepository.findById(appId)
-                .filter(a -> a.getCandidateId().equals(candidate.getId()))
+                .filter(a -> candidate.getId().equals(a.getCandidateId()))
                 .orElse(null);
     }
 
@@ -150,7 +150,7 @@ public class CandidateController {
         return "redirect:/candidate";
     }
 
-    // ---------- Симуляция AI-интервью ----------
+    // ---------- AI-интервью ----------
 
     @GetMapping("/interview/{appId}")
     public String interview(@PathVariable Long appId, HttpSession session, Model model) {

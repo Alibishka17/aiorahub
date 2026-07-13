@@ -1,10 +1,14 @@
 package com.truehire;
 
 import com.truehire.model.JobVacancy;
+import com.truehire.model.ApplicationStatus;
+import com.truehire.model.JobApplication;
 import com.truehire.model.Role;
 import com.truehire.model.User;
 import com.truehire.model.VacancyStatus;
 import com.truehire.repository.JobVacancyRepository;
+import com.truehire.repository.InterviewResultRepository;
+import com.truehire.repository.JobApplicationRepository;
 import com.truehire.repository.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,6 +43,12 @@ class AccountWorkflowTest {
 
     @Autowired
     private JobVacancyRepository vacancyRepository;
+
+    @Autowired
+    private JobApplicationRepository applicationRepository;
+
+    @Autowired
+    private InterviewResultRepository resultRepository;
 
     @Test
     void registersCandidateWithContactPreferencesAndHashedPassword() throws Exception {
@@ -161,5 +171,88 @@ class AccountWorkflowTest {
         mockMvc.perform(get("/employer").session(candidateSession))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/login?role=EMPLOYER"));
+    }
+
+    @Test
+    void guestCanApplyAndCompleteInterviewWithoutCreatingAccount() throws Exception {
+        MvcResult employerRegistration = mockMvc.perform(post("/register").with(csrf())
+                        .param("firstName", "Guest")
+                        .param("lastName", "Recruiter")
+                        .param("phone", "+971509876543")
+                        .param("email", "guest-recruiter@example.com")
+                        .param("password", "securePass123")
+                        .param("role", "EMPLOYER"))
+                .andReturn();
+        MockHttpSession employerSession = (MockHttpSession) employerRegistration.getRequest().getSession(false);
+        User employer = userRepository.findByEmailIgnoreCase("guest-recruiter@example.com").orElseThrow();
+        JobVacancy vacancy = vacancyRepository.save(new JobVacancy(
+                "Public Product Designer",
+                "Design recruiting workflows",
+                "Remote",
+                "Product design experience",
+                employer.getId()));
+        long usersBefore = userRepository.count();
+
+        mockMvc.perform(get("/vacancies"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Public Product Designer")));
+
+        MvcResult applicationResult = mockMvc.perform(post("/vacancies/{id}/apply", vacancy.getId()).with(csrf())
+                        .param("firstName", "Amina")
+                        .param("lastName", "Khan")
+                        .param("phone", "+77001239876")
+                        .param("telegramEnabled", "true")
+                        .param("whatsappEnabled", "true")
+                        .param("email", "guest-candidate@example.com"))
+                .andExpect(status().is3xxRedirection())
+                .andReturn();
+
+        assertThat(userRepository.count()).isEqualTo(usersBefore);
+        JobApplication application = applicationRepository
+                .findByVacancyIdAndGuestEmailIgnoreCase(vacancy.getId(), "guest-candidate@example.com")
+                .orElseThrow();
+        assertThat(application.getCandidateId()).isNull();
+        assertThat(application.getGuestAccessToken()).hasSize(32);
+        assertThat(application.isGuestTelegramEnabled()).isTrue();
+        assertThat(application.isGuestWhatsappEnabled()).isTrue();
+        assertThat(applicationResult.getResponse().getRedirectedUrl())
+                .isEqualTo("/guest/interview/" + application.getGuestAccessToken());
+
+        mockMvc.perform(get("/guest/interview/{token}", application.getGuestAccessToken()))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Amina Khan")));
+
+        mockMvc.perform(post("/guest/interview/{token}/complete", application.getGuestAccessToken()).with(csrf()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/guest/interview/" + application.getGuestAccessToken()));
+
+        JobApplication completed = applicationRepository.findById(application.getId()).orElseThrow();
+        assertThat(completed.getStatus()).isEqualTo(ApplicationStatus.INTERVIEW_COMPLETED);
+        assertThat(resultRepository.findByApplicationId(application.getId())).isPresent();
+
+        mockMvc.perform(get("/employer").session(employerSession))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Без регистрации")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("guest-candidate@example.com")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Написать кандидату")));
+    }
+
+    @Test
+    void guestApplicationRejectsPhoneOutsideInternationalFormat() throws Exception {
+        JobVacancy vacancy = vacancyRepository.findByStatus(VacancyStatus.PUBLISHED).stream()
+                .findFirst()
+                .orElseThrow();
+
+        mockMvc.perform(post("/vacancies/{id}/apply", vacancy.getId()).with(csrf())
+                        .param("firstName", "Invalid")
+                        .param("lastName", "Phone")
+                        .param("phone", "87001234567")
+                        .param("email", "guest-invalid-phone@example.com"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("международном формате")));
+
+        assertThat(applicationRepository
+                .findByVacancyIdAndGuestEmailIgnoreCase(vacancy.getId(), "guest-invalid-phone@example.com"))
+                .isEmpty();
     }
 }

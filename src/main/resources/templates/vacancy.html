@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${vacancy.title + ' — AI Ora Hub'}">Вакансия — AI Ora Hub</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/aiorahub.css">
+</head>
+<body class="aiora-page vacancies-page">
+<header class="site-header">
+    <div class="site-container site-header__inner">
+        <a href="/" class="brand" aria-label="AI Ora Hub — главная">
+            <span class="brand-name"><span class="brand-ai">AI</span><span>Ora</span><span class="brand-hub">Hub</span></span>
+        </a>
+        <a href="/vacancies" class="header-back">К списку вакансий</a>
+        <a href="/login" class="button button--primary">Войти в кабинет</a>
+    </div>
+</header>
+<main class="vacancy-detail">
+    <div class="site-container vacancy-detail__grid">
+        <article>
+            <span class="vacancy-state">Открыта для откликов</span>
+            <h1 th:text="${vacancy.title}">Название вакансии</h1>
+            <section class="vacancy-section">
+                <h2>О работе</h2>
+                <p th:text="${vacancy.description}">Описание</p>
+            </section>
+            <section class="vacancy-section">
+                <h2>Условия</h2>
+                <p th:text="${vacancy.conditions}">Условия</p>
+            </section>
+            <section class="vacancy-section">
+                <h2>Требования</h2>
+                <p th:text="${vacancy.candidateRequirements}">Требования</p>
+            </section>
+        </article>
+        <aside class="vacancy-apply-panel">
+            <h2>Откликнуться</h2>
+            <p>Оставьте контакты и перейдите к AI-интервью. Кабинет создавать не обязательно.</p>
+            <a th:href="@{'/vacancies/' + ${vacancy.id} + '/apply'}" class="button button--primary button--full">Откликнуться и пройти интервью</a>
+            <a href="/register?role=CANDIDATE" class="inline-link">Создать кабинет соискателя</a>
+        </aside>
+    </div>
+</main>
+</body>
+</html>

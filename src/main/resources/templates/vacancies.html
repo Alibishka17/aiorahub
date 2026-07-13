@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Открытые вакансии AI Ora Hub. Отклик и AI-интервью доступны без регистрации.">
+    <title>Вакансии — AI Ora Hub</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/aiorahub.css">
+</head>
+<body class="aiora-page vacancies-page">
+<header class="site-header">
+    <div class="site-container site-header__inner">
+        <a href="/" class="brand" aria-label="AI Ora Hub — главная">
+            <span class="brand-name"><span class="brand-ai">AI</span><span>Ora</span><span class="brand-hub">Hub</span></span>
+        </a>
+        <nav class="site-nav" aria-label="Основная навигация">
+            <a href="/vacancies" aria-current="page">Вакансии</a>
+            <a href="/register?role=CANDIDATE">Создать кабинет</a>
+        </nav>
+        <a href="/login" class="button button--primary">Войти в кабинет</a>
+    </div>
+</header>
+
+<main>
+    <section class="vacancies-heading">
+        <div class="site-container">
+            <span class="auth-kicker">Открытые позиции</span>
+            <h1>Вакансии</h1>
+            <p>Выберите позицию, отправьте контакты и пройдите AI-интервью. Для отклика регистрация не обязательна.</p>
+        </div>
+    </section>
+    <section class="vacancies-content">
+        <div class="site-container vacancy-list">
+            <p th:if="${vacancies.isEmpty()}" class="vacancy-empty">Сейчас нет опубликованных вакансий.</p>
+            <article th:each="vacancy : ${vacancies}" class="vacancy-card">
+                <div>
+                    <span class="vacancy-state">Открыта для откликов</span>
+                    <h2 th:text="${vacancy.title}">Название вакансии</h2>
+                    <p th:text="${vacancy.description}">Описание вакансии</p>
+                </div>
+                <div class="vacancy-card__action">
+                    <a th:href="@{'/vacancies/' + ${vacancy.id}}" class="button button--secondary">Открыть вакансию</a>
+                </div>
+            </article>
+        </div>
+    </section>
+</main>
+</body>
+</html>

@@ -64,10 +64,21 @@ public class EmployerController {
         if (!vacancies.isEmpty()) {
             List<Long> ids = new ArrayList<>(vacancyById.keySet());
             for (JobApplication app : applicationRepository.findByVacancyIdIn(ids)) {
+                User candidate = app.getCandidateId() == null
+                        ? null
+                        : userRepository.findById(app.getCandidateId()).orElse(null);
                 Map<String, Object> row = new HashMap<>();
                 row.put("app", app);
                 row.put("vacancy", vacancyById.get(app.getVacancyId()));
-                row.put("candidate", userRepository.findById(app.getCandidateId()).orElse(null));
+                row.put("candidate", candidate);
+                row.put("registered", candidate != null);
+                row.put("displayName", candidate != null ? candidate.getName() : app.getGuestName());
+                row.put("email", candidate != null ? candidate.getEmail() : app.getGuestEmail());
+                row.put("phone", candidate != null ? candidate.getPhone() : app.getGuestPhone());
+                row.put("telegramEnabled", candidate != null
+                        ? candidate.isTelegramEnabled() : app.isGuestTelegramEnabled());
+                row.put("whatsappEnabled", candidate != null
+                        ? candidate.isWhatsappEnabled() : app.isGuestWhatsappEnabled());
                 row.put("result", resultRepository.findByApplicationId(app.getId()).orElse(null));
                 responses.add(row);
             }
@@ -131,7 +142,8 @@ public class EmployerController {
         applicationRepository.findById(id).ifPresent(app -> {
             JobVacancy vacancy = vacancyRepository.findById(app.getVacancyId()).orElse(null);
             boolean ownVacancy = vacancy != null && vacancy.getEmployerId().equals(employer.getId());
-            if (ownVacancy && app.getStatus() == ApplicationStatus.INTERVIEW_COMPLETED) {
+            if (ownVacancy && app.getCandidateId() != null
+                    && app.getStatus() == ApplicationStatus.INTERVIEW_COMPLETED) {
                 app.setStatus(ApplicationStatus.OFFER_GRANTED);
                 app.setRecruiterMessage(recruiterMessage.trim());
                 app.setConfirmedAt(LocalDateTime.now());
@@ -170,6 +182,6 @@ public class EmployerController {
                 .toList();
         if (vacancyIds.isEmpty()) return false;
         return applicationRepository.findByVacancyIdIn(vacancyIds).stream()
-                .anyMatch(app -> app.getCandidateId().equals(candidateId));
+                .anyMatch(app -> candidateId.equals(app.getCandidateId()));
     }
 }

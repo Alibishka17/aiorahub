@@ -51,13 +51,13 @@ public class DataInitializer implements CommandLineRunner {
         }
 
         User employer = userRepository.save(new User(
-                AuthController.DEMO_EMPLOYER_EMAIL, passwordService.encode("demo123"), "Hans Weber (Berlin Tech GmbH)", Role.EMPLOYER));
+                AuthController.STARTER_EMPLOYER_EMAIL, passwordService.encode("local1234"), "Hans Weber (Berlin Tech GmbH)", Role.EMPLOYER));
 
         userRepository.save(new User(
-                AuthController.DEMO_CANDIDATE_EMAIL, passwordService.encode("demo123"), "Алексей Петров", Role.CANDIDATE));
+                AuthController.STARTER_CANDIDATE_EMAIL, passwordService.encode("local1234"), "Алексей Петров", Role.CANDIDATE));
 
         User anna = userRepository.save(new User(
-                "anna.k@example.com", passwordService.encode("demo123"), "Anna Kowalska", Role.CANDIDATE));
+                "anna.k@example.com", passwordService.encode("local1234"), "Anna Kowalska", Role.CANDIDATE));
 
         JobVacancy javaDev = vacancyRepository.save(new JobVacancy(
                 "Java-разработчик (Берлин)",
