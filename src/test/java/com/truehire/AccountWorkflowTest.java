@@ -35,7 +35,8 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 
 @SpringBootTest(properties = {
         "spring.datasource.url=jdbc:h2:mem:account-workflow;DB_CLOSE_DELAY=-1",
-        "app.upload-dir=target/test-uploads"
+        "app.upload-dir=target/test-uploads",
+        "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration,org.springframework.boot.autoconfigure.session.SessionAutoConfiguration"
 })
 @AutoConfigureMockMvc
 class AccountWorkflowTest {
@@ -121,7 +122,7 @@ class AccountWorkflowTest {
 
         mockMvc.perform(multipart("/candidate/cv").file(cv).with(csrf()).session(session))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/candidate#profile"));
+                .andExpect(redirectedUrl("/candidate?view=documents"));
 
         User candidate = userRepository.findByEmailIgnoreCase("cv-owner@example.com").orElseThrow();
         assertThat(candidate.getCvFileName()).isEqualTo("resume.pdf");
@@ -147,9 +148,17 @@ class AccountWorkflowTest {
                         .param("title", "QA Engineer")
                         .param("description", "Test product workflows")
                         .param("conditions", "Remote")
-                        .param("candidateRequirements", "Three years of experience"))
+                        .param("candidateRequirements", "Three years of experience")
+                        .param("category", "Quality assurance")
+                        .param("country", "United Arab Emirates")
+                        .param("city", "Dubai")
+                        .param("salaryMin", "18000")
+                        .param("salaryMax", "24000")
+                        .param("salaryCurrency", "AED")
+                        .param("requiredDocuments", "Work permit and degree")
+                        .param("additionalInfo", "Relocation package"))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/employer"));
+                .andExpect(redirectedUrl("/employer?view=vacancies"));
 
         User employer = userRepository.findByEmailIgnoreCase("recruiter-one@example.com").orElseThrow();
         JobVacancy vacancy = vacancyRepository.findByEmployerId(employer.getId()).stream()
@@ -157,6 +166,22 @@ class AccountWorkflowTest {
                 .findFirst()
                 .orElseThrow();
         assertThat(vacancy.getStatus()).isEqualTo(VacancyStatus.PUBLISHED);
+        assertThat(vacancy.getCountry()).isEqualTo("United Arab Emirates");
+        assertThat(vacancy.getCity()).isEqualTo("Dubai");
+        assertThat(vacancy.getSalaryMin()).isEqualTo(18000L);
+        assertThat(vacancy.getSalaryMax()).isEqualTo(24000L);
+        assertThat(vacancy.getSalaryCurrency()).isEqualTo("AED");
+        assertThat(vacancy.getRequiredDocuments()).isEqualTo("Work permit and degree");
+        assertThat(vacancy.getAdditionalInfo()).isEqualTo("Relocation package");
+
+        mockMvc.perform(get("/employer").param("view", "vacancies").session(employerSession))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.not(
+                        org.hamcrest.Matchers.containsString("id=\"new-vacancy\""))));
+        mockMvc.perform(get("/employer").param("view", "vacancies").param("create", "true")
+                        .session(employerSession))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("id=\"new-vacancy\"")));
 
         mockMvc.perform(post("/employer/vacancies/{id}/hide", vacancy.getId()).with(csrf()).session(employerSession))
                 .andExpect(status().is3xxRedirection());
@@ -228,7 +253,7 @@ class AccountWorkflowTest {
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Application sent")));
         assertThat(application.getStatus()).isEqualTo(ApplicationStatus.APPLIED);
 
-        mockMvc.perform(get("/employer").session(employerSession))
+        mockMvc.perform(get("/employer").param("view", "candidates").session(employerSession))
                 .andExpect(status().isOk())
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Not registered")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("guest-candidate@example.com")))
@@ -266,7 +291,7 @@ class AccountWorkflowTest {
         User candidate = userRepository.findByEmailIgnoreCase("direct-candidate@example.com").orElseThrow();
         JobVacancy vacancy = createPublishedVacancy("Direct application");
 
-        mockMvc.perform(get("/candidate").session(session))
+        mockMvc.perform(get("/candidate").param("view", "vacancies").session(session))
                 .andExpect(status().isOk())
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Open vacancy")));
 
@@ -289,11 +314,11 @@ class AccountWorkflowTest {
                 .orElseThrow();
         assertThat(application.getStatus()).isEqualTo(ApplicationStatus.APPLIED);
         assertThat(start.getResponse().getRedirectedUrl())
-                .isEqualTo("/candidate#history");
+                .isEqualTo("/candidate?view=applications");
 
         mockMvc.perform(post("/candidate/apply/{id}", vacancy.getId()).with(csrf()).session(session))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/candidate#history"));
+                .andExpect(redirectedUrl("/candidate?view=applications"));
         assertThat(applicationRepository.findByCandidateId(candidate.getId()))
                 .filteredOn(app -> app.getVacancyId().equals(vacancy.getId()))
                 .hasSize(1);
@@ -352,7 +377,8 @@ class AccountWorkflowTest {
 
         MockHttpSession employerSession = new MockHttpSession();
         employerSession.setAttribute("userId", employer.getId());
-        mockMvc.perform(get("/employer").session(employerSession).header("Accept-Language", "en-US"))
+        mockMvc.perform(get("/employer").param("view", "candidates")
+                        .session(employerSession).header("Accept-Language", "en-US"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Open transcript and conclusion")));
 
@@ -362,6 +388,108 @@ class AccountWorkflowTest {
                         .session(candidateSession).header("Accept-Language", "ru-RU"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Прогресс получения визы")));
+    }
+
+    @Test
+    void candidateDashboardSeparatesVacancySearchAndFiltersStructuredFields() throws Exception {
+        String suffix = UUID.randomUUID().toString();
+        User employer = userRepository.save(new User(
+                "filters-employer-" + suffix + "@example.com", "not-used", "Filter Employer", Role.EMPLOYER));
+        JobVacancy matching = new JobVacancy(
+                "Platform Engineer " + suffix, "Cloud platform", "Hybrid", "Kubernetes", employer.getId());
+        matching.setCategory("IT-" + suffix);
+        matching.setCity("Berlin-" + suffix);
+        matching.setCountry("Germany-" + suffix);
+        matching.setSalaryMin(70000L);
+        matching.setSalaryMax(90000L);
+        matching.setSalaryCurrency("EUR");
+        vacancyRepository.save(matching);
+        JobVacancy other = new JobVacancy(
+                "Clinic Nurse " + suffix, "Clinical care", "On-site", "Nursing", employer.getId());
+        other.setCategory("Healthcare-" + suffix);
+        other.setCity("Munich-" + suffix);
+        other.setCountry("Germany-" + suffix);
+        other.setSalaryMax(50000L);
+        other.setSalaryCurrency("EUR");
+        vacancyRepository.save(other);
+
+        User candidate = userRepository.save(new User(
+                "filters-candidate-" + suffix + "@example.com", "not-used", "Filter Candidate", Role.CANDIDATE));
+        MockHttpSession session = new MockHttpSession();
+        session.setAttribute("userId", candidate.getId());
+
+        mockMvc.perform(get("/candidate").session(session))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.not(
+                        org.hamcrest.Matchers.containsString(matching.getTitle()))));
+
+        mockMvc.perform(get("/candidate").session(session)
+                        .param("view", "vacancies")
+                        .param("category", matching.getCategory())
+                        .param("country", matching.getCountry())
+                        .param("city", matching.getCity())
+                        .param("salary", "80000"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString(matching.getTitle())))
+                .andExpect(content().string(org.hamcrest.Matchers.not(
+                        org.hamcrest.Matchers.containsString(other.getTitle()))));
+    }
+
+    @Test
+    void candidateCanUpdateProfileAndPasswordFromSettings() throws Exception {
+        String suffix = UUID.randomUUID().toString();
+        String originalEmail = "settings-old-" + suffix + "@example.com";
+        String newEmail = "settings-new-" + suffix + "@example.com";
+        MvcResult registration = mockMvc.perform(post("/register").with(csrf())
+                        .param("firstName", "Old")
+                        .param("lastName", "Name")
+                        .param("phone", "+77005550101")
+                        .param("email", originalEmail)
+                        .param("password", "securePass123")
+                        .param("role", "CANDIDATE"))
+                .andReturn();
+        MockHttpSession session = (MockHttpSession) registration.getRequest().getSession(false);
+
+        mockMvc.perform(post("/candidate/settings").with(csrf()).session(session)
+                        .param("firstName", "New")
+                        .param("lastName", "Profile")
+                        .param("phone", "+77005550202")
+                        .param("email", newEmail)
+                        .param("telegramEnabled", "true")
+                        .param("currentPassword", "securePass123")
+                        .param("newPassword", "newSecurePass456"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/candidate?view=settings"));
+
+        User updated = userRepository.findByEmailIgnoreCase(newEmail).orElseThrow();
+        assertThat(updated.getName()).isEqualTo("New Profile");
+        assertThat(updated.getPhone()).isEqualTo("+77005550202");
+        assertThat(updated.isTelegramEnabled()).isTrue();
+
+        mockMvc.perform(post("/login").with(csrf())
+                        .param("email", newEmail)
+                        .param("password", "newSecurePass456")
+                        .param("role", "CANDIDATE"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/candidate"));
+    }
+
+    @Test
+    void publicVacancyPageTracksViewsButExcludesOwningEmployer() throws Exception {
+        String suffix = UUID.randomUUID().toString();
+        User employer = userRepository.save(new User(
+                "views-employer-" + suffix + "@example.com", "not-used", "View Employer", Role.EMPLOYER));
+        JobVacancy vacancy = vacancyRepository.save(new JobVacancy(
+                "Viewed role " + suffix, "Description", "Remote", "Experience", employer.getId()));
+
+        mockMvc.perform(get("/vacancies/{id}", vacancy.getId())).andExpect(status().isOk());
+        assertThat(vacancyRepository.findById(vacancy.getId()).orElseThrow().getViewCount()).isEqualTo(1);
+
+        MockHttpSession ownerSession = new MockHttpSession();
+        ownerSession.setAttribute("userId", employer.getId());
+        mockMvc.perform(get("/vacancies/{id}", vacancy.getId()).session(ownerSession))
+                .andExpect(status().isOk());
+        assertThat(vacancyRepository.findById(vacancy.getId()).orElseThrow().getViewCount()).isEqualTo(1);
     }
 
     private JobVacancy createPublishedVacancy(String title) {

@@ -72,6 +72,12 @@ public class PublicVacancyController {
         if (!canView) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
+        boolean ownerViewing = currentUser != null && currentUser.getRole() == Role.EMPLOYER
+                && currentUser.getId().equals(vacancy.getEmployerId());
+        if (vacancy.getStatus() == VacancyStatus.PUBLISHED && !ownerViewing) {
+            vacancy.setViewCount(vacancy.getViewCount() + 1);
+            vacancyRepository.save(vacancy);
+        }
         model.addAttribute("vacancy", vacancy);
         model.addAttribute("currentUser", currentUser);
         if (currentUser != null && currentUser.getRole() == Role.CANDIDATE) {

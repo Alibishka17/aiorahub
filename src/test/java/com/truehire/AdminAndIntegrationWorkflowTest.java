@@ -25,7 +25,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         "spring.datasource.url=jdbc:h2:mem:admin-integration;DB_CLOSE_DELAY=-1",
         "app.upload-dir=target/test-admin-uploads",
         "app.admin.password-hash=$2y$10$JuGQiSzjVSGWLmTUNL47Te3uwlBZG6VgqbAeYkCO3QtTXVWGDT4Du",
-        "app.hrme.service-token=test-integration-token"
+        "app.hrme.service-token=test-integration-token",
+        "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration,org.springframework.boot.autoconfigure.session.SessionAutoConfiguration"
 })
 @AutoConfigureMockMvc
 class AdminAndIntegrationWorkflowTest {

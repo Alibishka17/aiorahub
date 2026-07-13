@@ -34,6 +34,31 @@ public class JobVacancy {
     @Column(nullable = false, length = 100)
     private String interviewTemplateId = "hrme-warsaw";
 
+    @Column(length = 120)
+    private String category;
+
+    @Column(length = 120)
+    private String city;
+
+    @Column(length = 120)
+    private String country;
+
+    private Long salaryMin;
+
+    private Long salaryMax;
+
+    @Column(length = 10)
+    private String salaryCurrency;
+
+    @Column(length = 3000)
+    private String requiredDocuments;
+
+    @Column(length = 3000)
+    private String additionalInfo;
+
+    @Column(nullable = false)
+    private long viewCount;
+
     public JobVacancy() {
     }
 
@@ -74,4 +99,31 @@ public class JobVacancy {
 
     public String getInterviewTemplateId() { return interviewTemplateId; }
     public void setInterviewTemplateId(String interviewTemplateId) { this.interviewTemplateId = interviewTemplateId; }
+
+    public String getCategory() { return category; }
+    public void setCategory(String category) { this.category = category; }
+
+    public String getCity() { return city; }
+    public void setCity(String city) { this.city = city; }
+
+    public String getCountry() { return country; }
+    public void setCountry(String country) { this.country = country; }
+
+    public Long getSalaryMin() { return salaryMin; }
+    public void setSalaryMin(Long salaryMin) { this.salaryMin = salaryMin; }
+
+    public Long getSalaryMax() { return salaryMax; }
+    public void setSalaryMax(Long salaryMax) { this.salaryMax = salaryMax; }
+
+    public String getSalaryCurrency() { return salaryCurrency; }
+    public void setSalaryCurrency(String salaryCurrency) { this.salaryCurrency = salaryCurrency; }
+
+    public String getRequiredDocuments() { return requiredDocuments; }
+    public void setRequiredDocuments(String requiredDocuments) { this.requiredDocuments = requiredDocuments; }
+
+    public String getAdditionalInfo() { return additionalInfo; }
+    public void setAdditionalInfo(String additionalInfo) { this.additionalInfo = additionalInfo; }
+
+    public long getViewCount() { return viewCount; }
+    public void setViewCount(long viewCount) { this.viewCount = viewCount; }
 }

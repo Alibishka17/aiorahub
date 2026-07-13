@@ -9,6 +9,7 @@ User=aiorahub
 Group=aiorahub
 WorkingDirectory=/opt/aiorahub
 EnvironmentFile=/etc/aiorahub/aiorahub.env
+Environment=UPLOAD_DIR=/var/lib/aiorahub/uploads
 ExecStart=/usr/bin/java -jar /opt/aiorahub/target/truehire-0.0.1-SNAPSHOT.jar
 SuccessExitStatus=143
 Restart=always

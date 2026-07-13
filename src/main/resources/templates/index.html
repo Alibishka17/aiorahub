@@ -24,7 +24,8 @@
             <a href="#audiences" th:text="#{nav.audiences}">For whom</a>
         </nav>
         <div th:replace="~{fragments/language-switcher :: switcher}"></div>
-        <a href="/login" class="button button--primary" th:text="#{nav.login}">Sign in</a>
+        <a th:if="${currentUser == null}" href="/login" class="button button--primary" th:text="#{nav.login}">Sign in</a>
+        <a th:if="${currentUser != null}" th:href="${currentUser.role.name() == 'EMPLOYER' ? '/employer' : '/candidate'}" class="button button--primary" th:text="#{nav.my_account}">My account</a>
     </div>
 </header>
 

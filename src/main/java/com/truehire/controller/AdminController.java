@@ -102,6 +102,14 @@ public class AdminController {
                                 @RequestParam String description,
                                 @RequestParam String conditions,
                                 @RequestParam String candidateRequirements,
+                                @RequestParam(defaultValue = "") String category,
+                                @RequestParam(defaultValue = "") String city,
+                                @RequestParam(defaultValue = "") String country,
+                                @RequestParam(required = false) Long salaryMin,
+                                @RequestParam(required = false) Long salaryMax,
+                                @RequestParam(defaultValue = "EUR") String salaryCurrency,
+                                @RequestParam(defaultValue = "") String requiredDocuments,
+                                @RequestParam(defaultValue = "") String additionalInfo,
                                 @RequestParam(defaultValue = "hrme-warsaw") String interviewTemplateId,
                                 HttpSession session) {
         if (!isAdmin(session)) return "redirect:/admin/login";
@@ -110,6 +118,8 @@ public class AdminController {
         }
         JobVacancy vacancy = new JobVacancy(title.trim(), description.trim(), conditions.trim(),
                 candidateRequirements.trim(), employerId);
+        setVacancyFields(vacancy, category, city, country, salaryMin, salaryMax, salaryCurrency,
+                requiredDocuments, additionalInfo);
         vacancy.setInterviewTemplateId(templateId(interviewTemplateId));
         vacancyRepository.save(vacancy);
         return "redirect:/admin#vacancies";
@@ -121,6 +131,14 @@ public class AdminController {
                                 @RequestParam String description,
                                 @RequestParam String conditions,
                                 @RequestParam String candidateRequirements,
+                                @RequestParam(defaultValue = "") String category,
+                                @RequestParam(defaultValue = "") String city,
+                                @RequestParam(defaultValue = "") String country,
+                                @RequestParam(required = false) Long salaryMin,
+                                @RequestParam(required = false) Long salaryMax,
+                                @RequestParam(defaultValue = "EUR") String salaryCurrency,
+                                @RequestParam(defaultValue = "") String requiredDocuments,
+                                @RequestParam(defaultValue = "") String additionalInfo,
                                 @RequestParam String interviewTemplateId,
                                 @RequestParam VacancyStatus status,
                                 HttpSession session) {
@@ -130,6 +148,8 @@ public class AdminController {
             vacancy.setDescription(description.trim());
             vacancy.setConditions(conditions.trim());
             vacancy.setCandidateRequirements(candidateRequirements.trim());
+            setVacancyFields(vacancy, category, city, country, salaryMin, salaryMax, salaryCurrency,
+                    requiredDocuments, additionalInfo);
             vacancy.setInterviewTemplateId(templateId(interviewTemplateId));
             vacancy.setStatus(status);
             vacancyRepository.save(vacancy);
@@ -144,5 +164,31 @@ public class AdminController {
     private String templateId(String value) {
         String normalized = value == null ? "" : value.trim();
         return normalized.matches("[a-z0-9-]{1,100}") ? normalized : "hrme-warsaw";
+    }
+
+    private void setVacancyFields(JobVacancy vacancy, String category, String city, String country,
+                                  Long salaryMin, Long salaryMax, String currency,
+                                  String requiredDocuments, String additionalInfo) {
+        vacancy.setCategory(blankToNull(category));
+        vacancy.setCity(blankToNull(city));
+        vacancy.setCountry(blankToNull(country));
+        vacancy.setRequiredDocuments(blankToNull(requiredDocuments));
+        vacancy.setAdditionalInfo(blankToNull(additionalInfo));
+        Long minimum = salaryMin == null || salaryMin < 0 ? null : salaryMin;
+        Long maximum = salaryMax == null || salaryMax < 0 ? null : salaryMax;
+        if (minimum != null && maximum != null && minimum > maximum) {
+            Long swap = minimum;
+            minimum = maximum;
+            maximum = swap;
+        }
+        vacancy.setSalaryMin(minimum);
+        vacancy.setSalaryMax(maximum);
+        String normalized = currency == null ? "EUR" : currency.trim().toUpperCase(Locale.ROOT);
+        vacancy.setSalaryCurrency(normalized.matches("[A-Z]{3}") ? normalized : "EUR");
+    }
+
+    private String blankToNull(String value) {
+        String normalized = value == null ? "" : value.trim();
+        return normalized.isBlank() ? null : normalized;
     }
 }

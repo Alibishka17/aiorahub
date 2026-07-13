@@ -11,121 +11,86 @@
 </head>
 <body class="aiora-app">
 <header class="app-topbar">
-    <a href="/" class="brand" th:attr="aria-label=#{brand.home}">
-        <span class="brand-name"><span class="brand-ai">AI</span><span>Ora</span><span class="brand-hub">Hub</span></span>
-    </a>
+    <a href="/" class="brand" th:attr="aria-label=#{brand.home}"><span class="brand-name"><span class="brand-ai">AI</span><span>Ora</span><span class="brand-hub">Hub</span></span></a>
     <div th:replace="~{fragments/language-switcher :: switcher}"></div>
-    <div class="app-user">
-        <span th:text="${user.name}">Employer</span>
-        <form th:action="@{/logout}" method="post"><button type="submit" th:text="#{nav.logout}">Sign out</button></form>
-    </div>
+    <div class="app-user"><span th:text="${user.name}">Employer</span><form th:action="@{/logout}" method="post"><button type="submit" th:text="#{nav.logout}">Sign out</button></form></div>
 </header>
 <div class="app-layout">
     <aside class="app-sidebar">
         <nav th:attr="aria-label=#{employer.nav}">
-            <a href="#overview" th:text="#{employer.overview}">Overview</a>
-            <a href="#vacancies" class="active" th:text="#{nav.vacancies}">Vacancies</a>
-            <a href="#candidates" th:text="#{employer.candidates}">Candidates</a>
+            <a href="/employer" th:classappend="${view == 'dashboard'} ? 'active'" th:text="#{nav.dashboard}">Dashboard</a>
+            <a href="/employer?view=vacancies" th:classappend="${view == 'vacancies'} ? 'active'" th:text="#{nav.vacancies}">Vacancies</a>
+            <a href="/employer?view=candidates" th:classappend="${view == 'candidates'} ? 'active'" th:text="#{employer.candidates}">Candidates</a>
+            <a href="/employer?view=settings" th:classappend="${view == 'settings'} ? 'active'" th:text="#{nav.settings}">Settings</a>
         </nav>
     </aside>
     <main class="app-main">
-        <div class="app-heading" id="overview">
-            <div>
-                <h1 th:text="#{employer.heading}">Recruiter workspace</h1>
-                <p th:text="#{employer.heading_copy}">Manage vacancies and candidates.</p>
+        <th:block th:if="${view == 'dashboard'}">
+            <div class="app-heading"><div><h1 th:text="#{employer.dashboard.heading}">Recruiter dashboard</h1><p th:text="#{employer.dashboard.copy}">Hiring activity at a glance.</p></div><a href="/employer?view=vacancies&amp;create=true#new-vacancy" class="button button--primary" th:text="#{employer.create_vacancy}">Create vacancy</a></div>
+            <div class="workspace-kpis">
+                <article><span th:text="#{employer.stats.published}">Published vacancies</span><strong th:text="${publishedVacancies}">0</strong></article>
+                <article><span th:text="#{employer.stats.vacancies}">All vacancies</span><strong th:text="${vacancies.size()}">0</strong></article>
+                <article><span th:text="#{employer.stats.candidates}">Candidates</span><strong th:text="${responses.size()}">0</strong></article>
+                <article><span th:text="#{employer.stats.interviews}">Completed interviews</span><strong th:text="${completedInterviews}">0</strong></article>
             </div>
-            <a href="#new-vacancy" class="button button--primary" th:text="#{employer.create_vacancy}">Create vacancy</a>
-        </div>
-        <div class="pipeline" th:attr="aria-label=#{employer.pipeline}">
-            <span th:text="#{employer.pipeline.new}">New candidates</span><span th:text="#{employer.pipeline.assessment}">Assessment</span><span th:text="#{employer.pipeline.interview}">Interview</span><span th:text="#{employer.pipeline.offer}">Offer</span><span th:text="#{employer.pipeline.relocation}">Relocation</span>
-        </div>
-        <div class="app-grid" id="vacancies">
-            <section class="app-panel" id="new-vacancy">
-                <div class="app-panel__header"><h2 th:text="#{employer.new_vacancy}">New vacancy</h2></div>
-                <div class="app-panel__body">
+            <section class="app-panel metric-chart"><div class="app-panel__header"><h2 th:text="#{employer.activity}">Hiring activity</h2></div><div class="app-panel__body">
+                <div class="metric-row"><div><span th:text="#{employer.activity.views}">Vacancy views</span><strong th:text="${totalViews}">0</strong></div><div class="metric-track"><span class="metric-fill metric-fill--views" th:style="'width:' + ${viewsPercent} + '%'"></span></div></div>
+                <div class="metric-row"><div><span th:text="#{employer.activity.applications}">Applications</span><strong th:text="${responses.size()}">0</strong></div><div class="metric-track"><span class="metric-fill metric-fill--applications" th:style="'width:' + ${applicationsPercent} + '%'"></span></div></div>
+                <div class="metric-row"><div><span th:text="#{employer.activity.interviews}">Completed interviews</span><strong th:text="${completedInterviews}">0</strong></div><div class="metric-track"><span class="metric-fill metric-fill--interviews" th:style="'width:' + ${interviewsPercent} + '%'"></span></div></div>
+            </div></section>
+            <section class="app-panel workspace-section"><div class="app-panel__header"><h2 th:text="#{employer.recent_candidates}">Recent candidates</h2><a href="/employer?view=candidates" class="inline-link" th:text="#{employer.view_all}">View all</a></div><div class="record-list">
+                <p th:if="${recentResponses.isEmpty()}" class="record" th:text="#{employer.no_responses}">No candidates.</p>
+                <article th:each="r : ${recentResponses}" class="record record--compact"><div class="record__head"><div><h3 th:text="${r.displayName}">Candidate</h3><p th:text="${r.vacancy != null ? r.vacancy.title : ''}">Vacancy</p></div><span class="status" th:text="#{${'status.' + #strings.toLowerCase(r.app.status.name())}}">Status</span></div></article>
+            </div></section>
+        </th:block>
+
+        <th:block th:if="${view == 'vacancies'}">
+            <div class="app-heading"><div><h1 th:text="#{employer.vacancies.heading}">Vacancies</h1><p th:text="#{employer.vacancies.copy}">Create and manage vacancies.</p></div><a th:if="${!showCreateForm}" href="/employer?view=vacancies&amp;create=true#new-vacancy" class="button button--primary" th:text="#{employer.create_vacancy}">Create vacancy</a><a th:if="${showCreateForm}" href="/employer?view=vacancies" class="button button--secondary" th:text="#{employer.create_cancel}">Cancel</a></div>
+            <section th:if="${showCreateForm}" class="app-panel vacancy-create-panel" id="new-vacancy"><div class="app-panel__header"><h2 th:text="#{employer.new_vacancy}">New vacancy</h2></div><div class="app-panel__body">
                     <form th:action="@{/employer/vacancies}" method="post" class="app-form">
-                        <div><label class="app-label" for="title" th:text="#{employer.title_label}">Title</label><input id="title" name="title" required th:placeholder="#{employer.title_placeholder}" class="app-input"></div>
-                        <div><label class="app-label" for="description" th:text="#{employer.description}">Job description</label><textarea id="description" name="description" required rows="3" th:placeholder="#{employer.description_placeholder}" class="app-input"></textarea></div>
-                        <div><label class="app-label" for="conditions" th:text="#{vacancy.conditions}">Conditions</label><textarea id="conditions" name="conditions" required rows="2" th:placeholder="#{employer.conditions_placeholder}" class="app-input"></textarea></div>
-                        <div><label class="app-label" for="requirements" th:text="#{vacancy.requirements}">Requirements</label><textarea id="requirements" name="candidateRequirements" required rows="2" th:placeholder="#{employer.requirements_placeholder}" class="app-input"></textarea></div>
-                        <button type="submit" class="button button--primary" th:text="#{employer.publish_vacancy}">Publish vacancy</button>
+                        <div><label class="app-label" for="title" th:text="#{employer.title_label}">Title</label><input id="title" name="title" required maxlength="255" th:placeholder="#{employer.title_placeholder}" class="app-input"></div>
+                        <div class="form-grid"><div><label class="app-label" for="category" th:text="#{vacancy.category}">Category</label><input id="category" name="category" maxlength="120" class="app-input" th:placeholder="#{vacancy.category_placeholder}"></div><div><label class="app-label" for="country" th:text="#{vacancy.country}">Country</label><select id="country" name="country" class="app-input" required><option value="" th:text="#{vacancy.choose_country}">Choose country</option><option th:each="item : ${countryOptions}" th:value="${item.name}" th:text="${item.name}">Country</option></select></div><div><label class="app-label" for="city" th:text="#{vacancy.city}">City</label><input id="city" name="city" list="city-options" maxlength="120" class="app-input" required th:placeholder="#{vacancy.city_placeholder}"><datalist id="city-options"><option th:each="item : ${cityOptions}" th:value="${item}"></option></datalist></div></div>
+                        <div class="salary-grid"><div><label class="app-label" for="salaryMin" th:text="#{vacancy.salary_min}">Minimum</label><input id="salaryMin" name="salaryMin" type="number" min="0" class="app-input"></div><div><label class="app-label" for="salaryMax" th:text="#{vacancy.salary_max}">Maximum</label><input id="salaryMax" name="salaryMax" type="number" min="0" class="app-input"></div><div><label class="app-label" for="salaryCurrency" th:text="#{vacancy.currency}">Currency</label><select id="salaryCurrency" name="salaryCurrency" class="app-input"><option>EUR</option><option>USD</option><option>KZT</option><option>PLN</option><option>GBP</option></select></div></div>
+                        <div><label class="app-label" for="description" th:text="#{employer.description}">Description</label><textarea id="description" name="description" required rows="3" maxlength="3000" th:placeholder="#{employer.description_placeholder}" class="app-input"></textarea></div>
+                        <div><label class="app-label" for="conditions" th:text="#{vacancy.conditions}">Conditions</label><textarea id="conditions" name="conditions" required rows="2" maxlength="2000" th:placeholder="#{employer.conditions_placeholder}" class="app-input"></textarea></div>
+                        <div><label class="app-label" for="requirements" th:text="#{vacancy.requirements}">Requirements</label><textarea id="requirements" name="candidateRequirements" required rows="2" maxlength="2000" th:placeholder="#{employer.requirements_placeholder}" class="app-input"></textarea></div>
+                        <div><label class="app-label" for="requiredDocuments" th:text="#{vacancy.required_documents}">Required documents</label><textarea id="requiredDocuments" name="requiredDocuments" rows="3" maxlength="2000" th:placeholder="#{vacancy.required_documents_placeholder}" class="app-input"></textarea></div>
+                        <div><label class="app-label" for="additionalInfo" th:text="#{vacancy.additional_info}">Additional information</label><textarea id="additionalInfo" name="additionalInfo" rows="3" maxlength="2000" th:placeholder="#{vacancy.additional_info_placeholder}" class="app-input"></textarea></div>
+                        <button type="submit" class="button button--primary" th:text="#{employer.publish_vacancy}">Publish</button>
                     </form>
-                </div>
-            </section>
-            <section class="app-panel">
-                <div class="app-panel__header"><h2 th:text="#{employer.my_vacancies}">My vacancies</h2><span class="status" th:text="#{employer.positions(${vacancies.size()})}">0 positions</span></div>
-                <div class="record-list">
-                    <p th:if="${vacancies.isEmpty()}" class="record" th:text="#{employer.no_vacancies}">No vacancies.</p>
-                    <article th:each="v : ${vacancies}" class="record">
-                        <div class="record__head">
-                            <h3 th:text="${v.title}">Вакансия</h3>
-                            <span class="status" th:text="${v.status.name() == 'PUBLISHED' ? #messages.msg('status.published') : #messages.msg('status.hidden')}">Published</span>
-                        </div>
-                        <p th:text="${v.description}">Описание</p>
-                        <p><strong th:text="#{vacancy.conditions} + ':'">Conditions:</strong> <span th:text="${v.conditions}">Conditions</span></p>
-                        <p><strong th:text="#{vacancy.requirements} + ':'">Requirements:</strong> <span th:text="${v.candidateRequirements}">Requirements</span></p>
-                        <div class="record-actions">
-                            <form th:if="${v.status.name() == 'PUBLISHED'}" th:action="@{'/employer/vacancies/' + ${v.id} + '/hide'}" method="post"><button class="text-action" type="submit" th:text="#{employer.hide}">Hide</button></form>
-                            <form th:if="${v.status.name() == 'HIDDEN'}" th:action="@{'/employer/vacancies/' + ${v.id} + '/publish'}" method="post"><button class="text-action" type="submit" th:text="#{employer.publish}">Publish</button></form>
-                            <form th:action="@{'/employer/vacancies/' + ${v.id} + '/archive'}" method="post"><button class="text-action text-action--danger" type="submit" th:text="#{employer.delete}">Delete</button></form>
-                        </div>
-                    </article>
-                </div>
-            </section>
-        </div>
-        <section class="app-panel" id="candidates" style="margin-top: 22px;">
-            <div class="app-panel__header"><h2 th:text="#{employer.candidates}">Candidates</h2><span class="status" th:text="#{employer.responses(${responses.size()})}">0 applications</span></div>
-            <div class="record-list">
-                <p th:if="${responses.isEmpty()}" class="record" th:text="#{employer.no_responses}">No applications.</p>
-                <article th:each="r : ${responses}" class="record">
-                    <div class="record__head">
-                        <div>
-                            <h3 th:text="${r.displayName}">Кандидат</h3>
-                            <span th:if="${!r.registered}" class="status status--guest" th:text="#{employer.guest}">Not registered</span>
-                            <p><strong th:text="#{employer.email}">Email:</strong> <a th:href="${'mailto:' + r.email}" th:text="${r.email}">email</a></p>
-                            <p th:if="${r.phone != null}"><strong th:text="#{employer.phone}">Phone:</strong> <a th:href="${'tel:' + r.phone}" th:text="${r.phone}">phone</a></p>
-                            <p th:if="${r.telegramEnabled || r.whatsappEnabled}" class="contact-tags">
-                                <span th:if="${r.telegramEnabled}">Telegram</span><span th:if="${r.whatsappEnabled}">WhatsApp</span>
-                            </p>
-                            <a th:if="${r.candidate != null && r.candidate.cvStorageKey != null}" th:href="@{'/employer/candidates/' + ${r.candidate.id} + '/cv'}" class="inline-link" th:text="#{employer.download_cv}">Download CV</a>
-                            <p><strong th:text="${r.vacancy != null ? r.vacancy.title : ''}">Вакансия</strong></p>
-                        </div>
-                        <th:block th:switch="${r.app.status.name()}">
-                            <span th:case="'APPLIED'" class="status" th:text="#{employer.new_application}">New application</span>
-                            <span th:case="'INTERVIEW_PENDING'" class="status" th:text="#{status.interview_pending}">Interview</span>
-                            <span th:case="'INTERVIEW_COMPLETED'" class="status" th:text="#{status.interview_completed}">Interview completed</span>
-                            <span th:case="'OFFER_GRANTED'" class="status" th:text="#{employer.offer_issued}">Offer issued</span>
-                            <span th:case="'VISA_PROCESSING'" class="status" th:text="#{status.visa_processing}">Relocation</span>
-                        </th:block>
-                    </div>
-                    <div th:if="${r.result != null}" class="ai-report">
-                        <div class="ai-report__label" th:text="#{employer.report_label}">AI report</div>
-                        <p><strong th:text="#{employer.language_level}">Language level:</strong> <span th:text="${r.result.aiLanguageScore}">B2</span></p>
-                        <p><strong th:text="#{employer.summary}">Summary:</strong> <span th:text="${r.result.summary != null ? r.result.summary : r.result.aiSoftSkillsComment}">Summary</span></p>
-                        <details class="report-details">
-                            <summary th:text="#{employer.open_report}">Open report</summary>
-                            <div class="transcript"><strong th:text="#{employer.transcript}">Transcript</strong><p th:text="${r.result.transcript != null ? r.result.transcript : #messages.msg('employer.transcript_missing')}">Transcript</p></div>
-                            <div><strong th:text="#{employer.conclusion}">Conclusion</strong><p th:text="${r.result.conclusion != null ? r.result.conclusion : r.result.aiSoftSkillsComment}">Conclusion</p></div>
-                        </details>
-                        <a th:if="${r.result.interviewRecordUrl != null}" th:href="${r.result.interviewRecordUrl}" target="_blank" rel="noopener" style="color: var(--teal); font-size: 12px; font-weight: 800;" th:text="#{employer.open_recording}">Open recording</a>
-                    </div>
-                    <p th:if="${r.result == null}" th:text="#{employer.interview_not_completed}">Interview not completed.</p>
-                    <div th:if="${!r.registered}" class="guest-contact-note">
-                        <strong th:text="#{employer.guest_heading}">Guest candidate</strong>
-                        <p th:text="#{employer.guest_copy}">Contact by email.</p>
-                        <a th:href="${'mailto:' + r.email}" class="button button--primary" th:text="#{employer.write}">Write to candidate</a>
-                    </div>
-                    <form th:if="${r.registered && r.app.status.name() == 'INTERVIEW_COMPLETED'}" th:action="@{'/employer/applications/' + ${r.app.id} + '/offer'}" method="post" class="confirm-form">
-                        <label class="app-label" th:for="${'message-' + r.app.id}" th:text="#{employer.letter}">Message</label>
-                        <textarea class="app-input" th:id="${'message-' + r.app.id}" name="recruiterMessage" rows="3" required th:text="#{employer.letter_default}">We confirm your candidacy.</textarea>
-                        <button type="submit" class="button button--primary" th:text="#{employer.confirm}">Confirm candidate</button>
-                    </form>
-                    <div th:if="${r.app.status.name() == 'OFFER_GRANTED' || r.app.status.name() == 'VISA_PROCESSING'}" class="confirmation-note">
-                        <strong th:text="#{employer.confirmed}">Candidate confirmed</strong><p th:text="${r.app.recruiterMessage}">Recruiter message</p>
-                    </div>
+                </div></section>
+            <section class="app-panel employer-vacancy-list"><div class="app-panel__header"><h2 th:text="#{employer.my_vacancies}">My vacancies</h2><span class="status" th:text="#{employer.positions(${vacancies.size()})}">0</span></div><div class="record-list">
+                <div th:if="${vacancies.isEmpty()}" class="vacancy-empty"><h3 th:text="#{employer.no_vacancies}">No vacancies.</h3><p th:text="#{employer.no_vacancies_copy}">Create the first vacancy to start receiving candidates.</p><a href="/employer?view=vacancies&amp;create=true#new-vacancy" class="button button--primary" th:text="#{employer.create_vacancy}">Create vacancy</a></div>
+                <article th:each="v : ${vacancies}" class="record employer-vacancy-record" th:classappend="${v.status.name() == 'PUBLISHED'} ? ' employer-vacancy-record--published'">
+                    <div class="record__head"><div><div class="vacancy-tags"><span th:if="${v.category != null}" th:text="${v.category}">Category</span><span th:if="${v.city != null || v.country != null}" th:text="${(v.city != null ? v.city : '') + (v.city != null && v.country != null ? ', ' : '') + (v.country != null ? v.country : '')}">Location</span></div><h3 th:text="${v.title}">Vacancy</h3></div><span class="status" th:text="${v.status.name() == 'PUBLISHED' ? #messages.msg('status.published') : #messages.msg('status.hidden')}">Published</span></div>
+                    <p th:text="${v.description}">Description</p><p th:if="${v.salaryMin != null || v.salaryMax != null}" class="salary" th:text="${(v.salaryMin != null ? v.salaryMin : 0) + (v.salaryMax != null ? ' - ' + v.salaryMax : '+') + ' ' + (v.salaryCurrency != null ? v.salaryCurrency : '')}">Salary</p>
+                    <div class="vacancy-record-details"><p><strong th:text="#{vacancy.conditions}">Conditions</strong><span th:text="${v.conditions}">Conditions</span></p><p><strong th:text="#{vacancy.requirements}">Requirements</strong><span th:text="${v.candidateRequirements}">Requirements</span></p><p th:if="${v.requiredDocuments != null}"><strong th:text="#{vacancy.required_documents}">Required documents</strong><span th:text="${v.requiredDocuments}">Documents</span></p><p th:if="${v.additionalInfo != null}"><strong th:text="#{vacancy.additional_info}">Additional information</strong><span th:text="${v.additionalInfo}">Information</span></p></div>
+                    <div class="vacancy-record-footer"><div class="vacancy-record-metrics"><span><strong th:text="${v.viewCount}">0</strong> <span th:text="#{vacancy.views}">views</span></span><span><strong th:text="${applicationCounts[v.id]}">0</strong> <span th:text="#{vacancy.applications}">applications</span></span></div><div class="record-actions"><form th:if="${v.status.name() == 'PUBLISHED'}" th:action="@{'/employer/vacancies/' + ${v.id} + '/hide'}" method="post"><button class="text-action" type="submit" th:text="#{employer.hide}">Hide</button></form><form th:if="${v.status.name() == 'HIDDEN'}" th:action="@{'/employer/vacancies/' + ${v.id} + '/publish'}" method="post"><button class="text-action" type="submit" th:text="#{employer.publish}">Publish</button></form><form th:action="@{'/employer/vacancies/' + ${v.id} + '/archive'}" method="post"><button class="text-action text-action--danger" type="submit" th:text="#{employer.delete}">Delete</button></form></div></div>
                 </article>
-            </div>
-        </section>
+            </div></section>
+        </th:block>
+
+        <th:block th:if="${view == 'candidates'}">
+            <div class="app-heading"><div><h1 th:text="#{employer.candidates.heading}">Candidates</h1><p th:text="#{employer.candidates.copy}">Applications, interviews and decisions.</p></div></div>
+            <section class="app-panel"><div class="app-panel__header"><h2 th:text="#{employer.candidates}">Candidates</h2><span class="status" th:text="#{employer.responses(${responses.size()})}">0</span></div><div class="record-list">
+                <p th:if="${responses.isEmpty()}" class="record" th:text="#{employer.no_responses}">No applications.</p>
+                <article th:each="r : ${responses}" class="record candidate-record">
+                    <div class="record__head"><div><h3 th:text="${r.displayName}">Candidate</h3><span th:if="${!r.registered}" class="status status--guest" th:text="#{employer.guest}">Not registered</span><p><strong th:text="#{employer.email}">Email:</strong> <a th:href="${'mailto:' + r.email}" th:text="${r.email}">email</a></p><p th:if="${r.phone != null}"><strong th:text="#{employer.phone}">Phone:</strong> <a th:href="${'tel:' + r.phone}" th:text="${r.phone}">phone</a></p><p th:if="${r.telegramEnabled || r.whatsappEnabled}" class="contact-tags"><span th:if="${r.telegramEnabled}">Telegram</span><span th:if="${r.whatsappEnabled}">WhatsApp</span></p><a th:if="${r.candidate != null && r.candidate.cvStorageKey != null}" th:href="@{'/employer/candidates/' + ${r.candidate.id} + '/cv'}" class="inline-link" th:text="#{employer.download_cv}">Download CV</a><p><strong th:text="${r.vacancy != null ? r.vacancy.title : ''}">Vacancy</strong></p></div><span class="status" th:text="#{${'status.' + #strings.toLowerCase(r.app.status.name())}}">Status</span></div>
+                    <div th:if="${r.result != null}" class="ai-report"><div class="ai-report__label" th:text="#{employer.report_label}">AI report</div><p><strong th:text="#{employer.language_level}">Language:</strong> <span th:text="${r.result.aiLanguageScore}">B2</span></p><p><strong th:text="#{employer.summary}">Summary:</strong> <span th:text="${r.result.summary != null ? r.result.summary : r.result.aiSoftSkillsComment}">Summary</span></p><details class="report-details"><summary th:text="#{employer.open_report}">Open report</summary><div class="transcript"><strong th:text="#{employer.transcript}">Transcript</strong><p th:text="${r.result.transcript != null ? r.result.transcript : #messages.msg('employer.transcript_missing')}">Transcript</p></div><div><strong th:text="#{employer.conclusion}">Conclusion</strong><p th:text="${r.result.conclusion != null ? r.result.conclusion : r.result.aiSoftSkillsComment}">Conclusion</p></div></details><a th:if="${r.result.interviewRecordUrl != null}" th:href="${r.result.interviewRecordUrl}" target="_blank" rel="noopener" class="inline-link" th:text="#{employer.open_recording}">Recording</a></div>
+                    <p th:if="${r.result == null}" th:text="#{employer.interview_not_completed}">Interview not completed.</p>
+                    <div th:if="${!r.registered}" class="guest-contact-note"><strong th:text="#{employer.guest_heading}">Guest candidate</strong><p th:text="#{employer.guest_copy}">Contact directly.</p><a th:href="${'mailto:' + r.email}" class="button button--primary" th:text="#{employer.write}">Write</a></div>
+                    <form th:if="${r.registered && r.app.status.name() == 'INTERVIEW_COMPLETED'}" th:action="@{'/employer/applications/' + ${r.app.id} + '/offer'}" method="post" class="confirm-form"><label class="app-label" th:for="${'message-' + r.app.id}" th:text="#{employer.letter}">Message</label><textarea class="app-input" th:id="${'message-' + r.app.id}" name="recruiterMessage" rows="3" required th:text="#{employer.letter_default}">Message</textarea><button type="submit" class="button button--primary" th:text="#{employer.confirm}">Confirm</button></form>
+                    <div th:if="${r.app.status.name() == 'OFFER_GRANTED' || r.app.status.name() == 'VISA_PROCESSING'}" class="confirmation-note"><strong th:text="#{employer.confirmed}">Confirmed</strong><p th:text="${r.app.recruiterMessage}">Message</p></div>
+                </article>
+            </div></section>
+        </th:block>
+
+        <th:block th:if="${view == 'settings'}">
+            <div class="app-heading"><div><h1 th:text="#{settings.heading}">Settings</h1><p th:text="#{settings.copy}">Update account details.</p></div></div>
+            <section class="app-panel settings-panel"><div class="app-panel__body"><div th:if="${settingsSaved}" class="form-success" th:text="#{settings.saved}">Saved.</div><div th:if="${settingsError}" class="form-alert" th:text="${settingsError}">Error</div>
+                <form action="/employer/settings" method="post" class="app-form"><h2 th:text="#{settings.profile}">Profile</h2><div class="form-grid"><div><label class="app-label" for="firstName" th:text="#{form.first_name}">First name</label><input id="firstName" name="firstName" class="app-input" required th:value="${user.firstName != null ? user.firstName : user.name}"></div><div><label class="app-label" for="lastName" th:text="#{form.last_name}">Last name</label><input id="lastName" name="lastName" class="app-input" required th:value="${user.lastName}"></div></div><div><label class="app-label" for="phone" th:text="#{form.phone}">Phone</label><input id="phone" name="phone" class="app-input" required pattern="\+[1-9][0-9]{7,14}" th:value="${user.phone}"><div class="contact-options"><label><input type="checkbox" name="telegramEnabled" value="true" th:checked="${user.telegramEnabled}"> Telegram</label><label><input type="checkbox" name="whatsappEnabled" value="true" th:checked="${user.whatsappEnabled}"> WhatsApp</label></div></div><div><label class="app-label" for="email" th:text="#{form.email}">Email</label><input id="email" name="email" type="email" class="app-input" required th:value="${user.email}"></div><h2 th:text="#{settings.password}">Password</h2><p class="field-hint" th:text="#{settings.password_hint}">Leave blank to keep it.</p><div class="form-grid"><div><label class="app-label" for="currentPassword" th:text="#{settings.current_password}">Current password</label><input id="currentPassword" name="currentPassword" type="password" class="app-input"></div><div><label class="app-label" for="newPassword" th:text="#{settings.new_password}">New password</label><input id="newPassword" name="newPassword" type="password" minlength="8" class="app-input"></div></div><button type="submit" class="button button--primary" th:text="#{settings.save}">Save</button></form>
+            </div></section>
+        </th:block>
     </main>
 </div>
 </body>

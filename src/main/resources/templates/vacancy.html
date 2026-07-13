@@ -27,6 +27,7 @@
         <article>
             <span class="vacancy-state" th:text="#{vacancies.open}">Open</span>
             <h1 th:text="${vacancy.title}">Название вакансии</h1>
+            <div class="vacancy-tags vacancy-detail__tags"><span th:if="${vacancy.category != null}" th:text="${vacancy.category}">Category</span><span th:if="${vacancy.city != null || vacancy.country != null}" th:text="${(vacancy.city != null ? vacancy.city : '') + (vacancy.city != null && vacancy.country != null ? ', ' : '') + (vacancy.country != null ? vacancy.country : '')}">Location</span><span th:if="${vacancy.salaryMin != null || vacancy.salaryMax != null}" th:text="${(vacancy.salaryMin != null ? vacancy.salaryMin : 0) + (vacancy.salaryMax != null ? ' - ' + vacancy.salaryMax : '+') + ' ' + (vacancy.salaryCurrency != null ? vacancy.salaryCurrency : '')}">Salary</span></div>
             <section class="vacancy-section">
                 <h2 th:text="#{vacancy.about}">About the role</h2>
                 <p th:text="${vacancy.description}">Описание</p>
@@ -38,6 +39,14 @@
             <section class="vacancy-section">
                 <h2 th:text="#{vacancy.requirements}">Requirements</h2>
                 <p th:text="${vacancy.candidateRequirements}">Требования</p>
+            </section>
+            <section th:if="${vacancy.requiredDocuments != null}" class="vacancy-section">
+                <h2 th:text="#{vacancy.required_documents}">Required documents</h2>
+                <p th:text="${vacancy.requiredDocuments}">Documents</p>
+            </section>
+            <section th:if="${vacancy.additionalInfo != null}" class="vacancy-section">
+                <h2 th:text="#{vacancy.additional_info}">Additional information</h2>
+                <p th:text="${vacancy.additionalInfo}">Information</p>
             </section>
         </article>
         <aside class="vacancy-apply-panel">

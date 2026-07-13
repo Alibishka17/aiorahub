@@ -13,7 +13,7 @@
 - Runtime secrets: `/etc/aiorahub/aiorahub.env`, owned by `root:aiorahub`, mode `0640`.
 - DNS: Cloudflare authoritative nameservers.
 
-Flyway owns the database schema. Hibernate validates it at startup and must not use `create` or `create-drop` in production. Application startup never seeds users, vacancies, applications, or interview results.
+Flyway owns the application schema. Spring Session initializes its standard JDBC tables and keeps authenticated sessions in PostgreSQL for 24 hours. Hibernate validates application entities at startup and must not use `create` or `create-drop` in production. Application startup never seeds users, vacancies, applications, or interview results.
 
 ## DNS
 
@@ -49,7 +49,7 @@ JAR, database and uploads backups must run before a production rebuild. Database
 
 ## PostgreSQL and service identity
 
-The production environment file must contain `SPRING_PROFILES_ACTIVE=prod`, database credentials, `ADMIN_USERNAME`, a BCrypt-only `ADMIN_PASSWORD_HASH`, `HRME_BASE_URL`, and `HRME_SERVICE_TOKEN`; use `deploy/systemd/aiorahub.env.example` as the key list. `UPLOAD_DIR` is optional and defaults to `/var/lib/aiorahub/uploads`. The same random service token must be installed in HRme as `AIORAHUB_SERVICE_TOKEN`. Never commit plaintext passwords or real tokens.
+The production environment file must contain `SPRING_PROFILES_ACTIVE=prod`, database credentials, `ADMIN_USERNAME`, a BCrypt-only `ADMIN_PASSWORD_HASH`, `HRME_BASE_URL`, `HRME_SERVICE_TOKEN`, and `UPLOAD_DIR=/var/lib/aiorahub/uploads`; use `deploy/systemd/aiorahub.env.example` as the key list. The same random service token must be installed in HRme as `AIORAHUB_SERVICE_TOKEN`. Never commit plaintext passwords or real tokens.
 
 Before the first release with CV uploads:
 
@@ -100,6 +100,7 @@ Expected public behavior:
 - `https://aiorahub.com` returns `200`.
 - `https://aiorahub.com/vacancies` returns `200` and lists only published vacancies.
 - `/admin/login` returns `200`; protected admin actions require its session and CSRF token.
+- an authenticated `SESSION` cookie has a 24-hour `Max-Age`, and its row remains in `SPRING_SESSION` after an application restart.
 - integration endpoints return `401` without the shared Bearer token.
 - Flyway reports schema version 4 or later and the service log has no migration, callback or template errors.
 - `https://www.aiorahub.com` redirects to the apex domain.

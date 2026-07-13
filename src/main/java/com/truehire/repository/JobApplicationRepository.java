@@ -15,4 +15,5 @@ public interface JobApplicationRepository extends JpaRepository<JobApplication, 
     Optional<JobApplication> findByGuestAccessToken(String guestAccessToken);
     Optional<JobApplication> findByVacancyIdAndGuestEmailIgnoreCase(Long vacancyId, String guestEmail);
     long countByStatus(ApplicationStatus status);
+    long countByVacancyId(Long vacancyId);
 }
