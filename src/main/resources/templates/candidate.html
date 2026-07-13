@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AioraHub — Кабинет специалиста</title>
+    <title>AI Ora Hub — Кабинет специалиста</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -11,9 +11,8 @@
 </head>
 <body class="aiora-app">
 <header class="app-topbar">
-    <a href="/" class="brand" aria-label="AioraHub — главная">
-        <img src="/images/aiorahub-mark.png" alt="" class="brand-mark">
-        <span class="brand-name">Aiora<span>Hub</span></span>
+    <a href="/" class="brand" aria-label="AI Ora Hub — главная">
+        <span class="brand-name"><span class="brand-ai">AI</span><span>Ora</span><span class="brand-hub">Hub</span></span>
     </a>
     <div class="app-user"><span th:text="${user.name}">Соискатель</span><a href="/logout">Выйти</a></div>
 </header>
@@ -27,7 +26,7 @@
         <div class="app-heading">
             <div>
                 <h1>Вакансии для международных специалистов</h1>
-                <p>Откликнитесь — AI-агент AioraHub проведёт структурированное интервью и передаст отчёт работодателю.</p>
+                <p>Откликнитесь — AI-агент проведёт структурированное интервью и передаст отчёт работодателю.</p>
             </div>
         </div>
         <p th:if="${vacancies.isEmpty()}" class="app-card">Вакансий пока нет.</p>

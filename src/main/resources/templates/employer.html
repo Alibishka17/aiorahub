@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AioraHub HRM — Кабинет работодателя</title>
+    <title>AI Ora Hub — Кабинет работодателя</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -11,9 +11,8 @@
 </head>
 <body class="aiora-app">
 <header class="app-topbar">
-    <a href="/" class="brand" aria-label="AioraHub — главная">
-        <img src="/images/aiorahub-mark.png" alt="" class="brand-mark">
-        <span class="brand-name">Aiora<span>Hub</span></span>
+    <a href="/" class="brand" aria-label="AI Ora Hub — главная">
+        <span class="brand-name"><span class="brand-ai">AI</span><span>Ora</span><span class="brand-hub">Hub</span></span>
     </a>
     <div class="app-user">
         <span th:text="${user.name}">Работодатель</span>
@@ -22,11 +21,11 @@
 </header>
 <div class="app-layout">
     <aside class="app-sidebar">
-        <nav aria-label="HRM навигация">
+        <nav aria-label="Навигация рекрутера">
             <a href="#overview">Обзор</a>
             <a href="#vacancies">Вакансии</a>
             <a href="#candidates" class="active">Кандидаты</a>
-            <span>AI-скрининг</span><span>Интервью</span><span>Офферы</span><span>Релокация</span>
+            <span>Оценка</span><span>Интервью</span><span>Офферы</span><span>Релокация</span>
         </nav>
     </aside>
     <main class="app-main">
@@ -38,7 +37,7 @@
             <a href="#new-vacancy" class="button button--primary">Создать вакансию</a>
         </div>
         <div class="pipeline" aria-label="Этапы найма">
-            <span>Новые кандидаты</span><span>AI-скрининг</span><span>Интервью</span><span>Оффер</span><span>Релокация</span>
+            <span>Новые кандидаты</span><span>Оценка</span><span>Интервью</span><span>Оффер</span><span>Релокация</span>
         </div>
         <div class="app-grid" id="vacancies">
             <section class="app-panel" id="new-vacancy">
@@ -86,7 +85,7 @@
                         </th:block>
                     </div>
                     <div th:if="${r.result != null}" class="ai-report">
-                        <div class="ai-report__label">AI-отчёт AioraHub</div>
+                        <div class="ai-report__label">AI-отчёт AI Ora Hub</div>
                         <p><strong>Уровень языка:</strong> <span th:text="${r.result.aiLanguageScore}">B2</span></p>
                         <p><strong>Комментарий:</strong> <span th:text="${r.result.aiSoftSkillsComment}">Комментарий</span></p>
                         <a th:href="${r.result.interviewRecordUrl}" target="_blank" rel="noopener" style="color: var(--teal); font-size: 12px; font-weight: 800;">Открыть запись интервью</a>

@@ -1,5 +1,5 @@
 [Unit]
-Description=AioraHub Spring Boot App
+Description=AI Ora Hub Spring Boot App
 After=network.target postgresql.service
 Wants=postgresql.service
 
