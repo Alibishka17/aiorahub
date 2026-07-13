@@ -21,6 +21,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import jakarta.servlet.http.Cookie;
 
+import java.util.Map;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -123,7 +124,7 @@ class AccountWorkflowTest {
 
         mockMvc.perform(multipart("/candidate/cv").file(cv).with(csrf()).session(session))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/candidate?view=documents"));
+                .andExpect(redirectedUrl("/candidate/documents"));
 
         User candidate = userRepository.findByEmailIgnoreCase("cv-owner@example.com").orElseThrow();
         assertThat(candidate.getCvFileName()).isEqualTo("resume.pdf");
@@ -159,7 +160,7 @@ class AccountWorkflowTest {
                         .param("requiredDocuments", "Work permit and degree")
                         .param("additionalInfo", "Relocation package"))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/employer?view=vacancies"));
+                .andExpect(redirectedUrl("/employer/vacancies"));
 
         User employer = userRepository.findByEmailIgnoreCase("recruiter-one@example.com").orElseThrow();
         JobVacancy vacancy = vacancyRepository.findByEmployerId(employer.getId()).stream()
@@ -175,11 +176,11 @@ class AccountWorkflowTest {
         assertThat(vacancy.getRequiredDocuments()).isEqualTo("Work permit and degree");
         assertThat(vacancy.getAdditionalInfo()).isEqualTo("Relocation package");
 
-        mockMvc.perform(get("/employer").param("view", "vacancies").session(employerSession))
+        mockMvc.perform(get("/employer/vacancies").session(employerSession))
                 .andExpect(status().isOk())
                 .andExpect(content().string(org.hamcrest.Matchers.not(
                         org.hamcrest.Matchers.containsString("id=\"new-vacancy\""))));
-        mockMvc.perform(get("/employer").param("view", "vacancies").param("create", "true")
+        mockMvc.perform(get("/employer/vacancies").param("create", "true")
                         .session(employerSession))
                 .andExpect(status().isOk())
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("id=\"new-vacancy\"")));
@@ -254,7 +255,7 @@ class AccountWorkflowTest {
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Application sent")));
         assertThat(application.getStatus()).isEqualTo(ApplicationStatus.APPLIED);
 
-        mockMvc.perform(get("/employer").param("view", "candidates").session(employerSession))
+        mockMvc.perform(get("/employer/candidates").session(employerSession))
                 .andExpect(status().isOk())
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Not registered")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("guest-candidate@example.com")))
@@ -292,7 +293,7 @@ class AccountWorkflowTest {
         User candidate = userRepository.findByEmailIgnoreCase("direct-candidate@example.com").orElseThrow();
         JobVacancy vacancy = createPublishedVacancy("Direct application");
 
-        mockMvc.perform(get("/candidate").param("view", "vacancies").session(session))
+        mockMvc.perform(get("/candidate/vacancies").session(session))
                 .andExpect(status().isOk())
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Open vacancy")));
 
@@ -380,7 +381,7 @@ class AccountWorkflowTest {
 
         MockHttpSession employerSession = new MockHttpSession();
         employerSession.setAttribute("userId", employer.getId());
-        mockMvc.perform(get("/employer").param("view", "candidates")
+        mockMvc.perform(get("/employer/candidates")
                         .session(employerSession).header("Accept-Language", "en-US"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Open transcript and conclusion")));
@@ -426,8 +427,7 @@ class AccountWorkflowTest {
                 .andExpect(content().string(org.hamcrest.Matchers.not(
                         org.hamcrest.Matchers.containsString(matching.getTitle()))));
 
-        mockMvc.perform(get("/candidate").session(session)
-                        .param("view", "vacancies")
+        mockMvc.perform(get("/candidate/vacancies").session(session)
                         .param("category", matching.getCategory())
                         .param("country", matching.getCountry())
                         .param("city", matching.getCity())
@@ -436,6 +436,47 @@ class AccountWorkflowTest {
                 .andExpect(content().string(org.hamcrest.Matchers.containsString(matching.getTitle())))
                 .andExpect(content().string(org.hamcrest.Matchers.not(
                         org.hamcrest.Matchers.containsString(other.getTitle()))));
+    }
+
+    @Test
+    void candidateAndEmployerSectionsRenderAsDistinctPages() throws Exception {
+        String suffix = UUID.randomUUID().toString();
+        User candidate = userRepository.save(new User(
+                "routes-candidate-" + suffix + "@example.com", "not-used", "Route Candidate", Role.CANDIDATE));
+        User employer = userRepository.save(new User(
+                "routes-employer-" + suffix + "@example.com", "not-used", "Route Employer", Role.EMPLOYER));
+        MockHttpSession candidateSession = new MockHttpSession();
+        candidateSession.setAttribute("userId", candidate.getId());
+        MockHttpSession employerSession = new MockHttpSession();
+        employerSession.setAttribute("userId", employer.getId());
+
+        for (Map.Entry<String, String> page : Map.of(
+                "/candidate", "Candidate dashboard — AIOraHub",
+                "/candidate/vacancies", "Vacancies — AIOraHub",
+                "/candidate/applications", "My applications — AIOraHub",
+                "/candidate/documents", "Documents — AIOraHub",
+                "/candidate/settings", "Settings — AIOraHub").entrySet()) {
+            mockMvc.perform(get(page.getKey()).session(candidateSession))
+                    .andExpect(status().isOk())
+                    .andExpect(content().string(org.hamcrest.Matchers.containsString(page.getValue())));
+        }
+
+        for (Map.Entry<String, String> page : Map.of(
+                "/employer", "Recruiter dashboard — AIOraHub",
+                "/employer/vacancies", "Vacancies — AIOraHub",
+                "/employer/candidates", "Candidates — AIOraHub",
+                "/employer/settings", "Settings — AIOraHub").entrySet()) {
+            mockMvc.perform(get(page.getKey()).session(employerSession))
+                    .andExpect(status().isOk())
+                    .andExpect(content().string(org.hamcrest.Matchers.containsString(page.getValue())));
+        }
+
+        mockMvc.perform(get("/candidate").param("view", "documents").session(candidateSession))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Documents — AIOraHub")));
+        mockMvc.perform(get("/employer").param("view", "candidates").session(employerSession))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Candidates — AIOraHub")));
     }
 
     @Test
@@ -462,7 +503,7 @@ class AccountWorkflowTest {
                         .param("currentPassword", "securePass123")
                         .param("newPassword", "newSecurePass456"))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/candidate?view=settings"));
+                .andExpect(redirectedUrl("/candidate/settings"));
 
         User updated = userRepository.findByEmailIgnoreCase(newEmail).orElseThrow();
         assertThat(updated.getName()).isEqualTo("New Profile");

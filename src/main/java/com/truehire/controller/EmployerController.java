@@ -4,6 +4,7 @@ import com.truehire.model.*;
 import com.truehire.repository.*;
 import com.truehire.service.AccountSettingsService;
 import com.truehire.service.CvStorageService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.context.MessageSource;
 import org.springframework.core.io.Resource;
@@ -61,9 +62,10 @@ public class EmployerController {
                 .orElse(null);
     }
 
-    @GetMapping
-    public String dashboard(@RequestParam(defaultValue = "dashboard") String view,
+    @GetMapping({"", "/vacancies", "/candidates", "/settings"})
+    public String dashboard(@RequestParam(defaultValue = "") String view,
                             @RequestParam(defaultValue = "false") boolean create,
+                            HttpServletRequest request,
                             HttpSession session,
                             Locale locale,
                             Model model) {
@@ -110,7 +112,9 @@ public class EmployerController {
                 JobVacancy::getId, vacancy -> applicationRepository.countByVacancyId(vacancy.getId())));
 
         model.addAttribute("user", employer);
-        model.addAttribute("view", VIEWS.contains(view) ? view : "dashboard");
+        String selectedView = resolveView(request.getRequestURI(), view);
+        model.addAttribute("view", selectedView);
+        model.addAttribute("pageTitle", messages.getMessage(employerPageTitleKey(selectedView), null, locale));
         model.addAttribute("showCreateForm", create);
         model.addAttribute("vacancies", vacancies);
         model.addAttribute("responses", responses);
@@ -153,7 +157,7 @@ public class EmployerController {
         vacancy.setAdditionalInfo(blankToNull(additionalInfo));
         setSalary(vacancy, salaryMin, salaryMax, salaryCurrency);
         vacancyRepository.save(vacancy);
-        return "redirect:/employer?view=vacancies";
+        return "redirect:/employer/vacancies";
     }
 
     @PostMapping("/vacancies/{id}/publish")
@@ -180,7 +184,7 @@ public class EmployerController {
                     v.setStatus(status);
                     vacancyRepository.save(v);
                 });
-        return "redirect:/employer?view=vacancies";
+        return "redirect:/employer/vacancies";
     }
 
     @PostMapping("/settings")
@@ -204,7 +208,7 @@ public class EmployerController {
         } else {
             redirectAttributes.addFlashAttribute("settingsError", messages.getMessage(error, null, locale));
         }
-        return "redirect:/employer?view=settings";
+        return "redirect:/employer/settings";
     }
 
     @PostMapping("/applications/{id}/offer")
@@ -224,7 +228,7 @@ public class EmployerController {
                 applicationRepository.save(app);
             }
         });
-        return "redirect:/employer?view=candidates";
+        return "redirect:/employer/candidates";
     }
 
     @GetMapping("/candidates/{candidateId}/cv")
@@ -288,6 +292,24 @@ public class EmployerController {
         vacancies.stream().map(JobVacancy::getCity).filter(Objects::nonNull)
                 .map(String::trim).filter(value -> !value.isBlank()).forEach(cities::add);
         return new ArrayList<>(cities);
+    }
+
+    private String resolveView(String requestUri, String legacyView) {
+        for (String employerView : VIEWS) {
+            if (!employerView.equals("dashboard") && requestUri.endsWith("/" + employerView)) {
+                return employerView;
+            }
+        }
+        return VIEWS.contains(legacyView) ? legacyView : "dashboard";
+    }
+
+    private String employerPageTitleKey(String view) {
+        return switch (view) {
+            case "vacancies" -> "employer.vacancies.heading";
+            case "candidates" -> "employer.candidates.heading";
+            case "settings" -> "settings.heading";
+            default -> "employer.dashboard.heading";
+        };
     }
 
     public record CountryOption(String code, String name) {}

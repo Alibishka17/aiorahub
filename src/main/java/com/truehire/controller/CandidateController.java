@@ -5,6 +5,7 @@ import com.truehire.repository.*;
 import com.truehire.service.AccountSettingsService;
 import com.truehire.service.CvStorageService;
 import com.truehire.service.InterviewLaunchService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -75,19 +76,21 @@ public class CandidateController {
                 .orElse(null);
     }
 
-    @GetMapping
-    public String dashboard(@RequestParam(defaultValue = "dashboard") String view,
+    @GetMapping({"", "/vacancies", "/applications", "/documents", "/settings"})
+    public String dashboard(@RequestParam(defaultValue = "") String view,
                             @RequestParam(defaultValue = "") String query,
                             @RequestParam(defaultValue = "") String category,
                             @RequestParam(defaultValue = "") String city,
                             @RequestParam(defaultValue = "") String country,
                             @RequestParam(required = false) Long salary,
+                            HttpServletRequest request,
                             HttpSession session,
+                            Locale locale,
                             Model model) {
         User candidate = currentCandidate(session);
         if (candidate == null) return "redirect:/login?role=CANDIDATE";
 
-        String selectedView = VIEWS.contains(view) ? view : "dashboard";
+        String selectedView = resolveView(request.getRequestURI(), view);
         List<JobApplication> applications = new ArrayList<>(applicationRepository.findByCandidateId(candidate.getId()));
         applications.sort(Comparator.comparing(JobApplication::getCreatedAt,
                 Comparator.nullsLast(Comparator.naturalOrder())).reversed());
@@ -126,6 +129,7 @@ public class CandidateController {
 
         model.addAttribute("user", candidate);
         model.addAttribute("view", selectedView);
+        model.addAttribute("pageTitle", messages.getMessage(candidatePageTitleKey(selectedView), null, locale));
         model.addAttribute("applications", applications);
         model.addAttribute("recentApplications", applications.stream().limit(4).toList());
         model.addAttribute("vacancyById", vacancyMap);
@@ -165,7 +169,7 @@ public class CandidateController {
         } catch (IllegalArgumentException | IOException ex) {
             redirectAttributes.addFlashAttribute("cvError", ex.getMessage());
         }
-        return "redirect:/candidate?view=documents";
+        return "redirect:/candidate/documents";
     }
 
     @GetMapping("/cv")
@@ -204,7 +208,7 @@ public class CandidateController {
         } else {
             redirectAttributes.addFlashAttribute("settingsError", messages.getMessage(error, null, locale));
         }
-        return "redirect:/candidate?view=settings";
+        return "redirect:/candidate/settings";
     }
 
     @PostMapping("/apply/{vacancyId}")
@@ -215,12 +219,12 @@ public class CandidateController {
         User candidate = currentCandidate(session);
         if (candidate == null) return "redirect:/login?role=CANDIDATE";
         JobVacancy vacancy = vacancyRepository.findById(vacancyId).orElse(null);
-        if (vacancy == null) return "redirect:/candidate?view=vacancies";
+        if (vacancy == null) return "redirect:/candidate/vacancies";
 
         JobApplication application = applicationRepository
                 .findByVacancyIdAndCandidateId(vacancyId, candidate.getId()).orElse(null);
         if (application == null) {
-            if (vacancy.getStatus() != VacancyStatus.PUBLISHED) return "redirect:/candidate?view=vacancies";
+            if (vacancy.getStatus() != VacancyStatus.PUBLISHED) return "redirect:/candidate/vacancies";
             application = applicationRepository.save(new JobApplication(
                     vacancyId, candidate.getId(), ApplicationStatus.APPLIED));
         }
@@ -239,9 +243,9 @@ public class CandidateController {
         User candidate = currentCandidate(session);
         if (candidate == null) return "redirect:/login?role=CANDIDATE";
         JobApplication application = ownApplication(appId, candidate);
-        if (application == null) return "redirect:/candidate?view=applications";
+        if (application == null) return "redirect:/candidate/applications";
         JobVacancy vacancy = vacancyRepository.findById(application.getVacancyId()).orElse(null);
-        if (vacancy == null) return "redirect:/candidate?view=applications";
+        if (vacancy == null) return "redirect:/candidate/applications";
         try {
             return "redirect:" + interviewLaunchService.launch(application, vacancy, candidate.getEmail());
         } catch (IllegalStateException ex) {
@@ -268,7 +272,7 @@ public class CandidateController {
         JobApplication app = ownApplication(appId, candidate);
         if (app == null || (app.getStatus() != ApplicationStatus.OFFER_GRANTED
                 && app.getStatus() != ApplicationStatus.VISA_PROCESSING)) {
-            return "redirect:/candidate?view=applications";
+            return "redirect:/candidate/applications";
         }
         List<VisaDocument> documents = documentRepository.findByApplicationId(app.getId());
         int step = documents.isEmpty() ? 0 : documents.get(0).getStatus().ordinal() + 1;
@@ -290,7 +294,7 @@ public class CandidateController {
         if (candidate == null) return "redirect:/login?role=CANDIDATE";
         JobApplication app = ownApplication(appId, candidate);
         if (app == null || app.getStatus() != ApplicationStatus.OFFER_GRANTED) {
-            return "redirect:/candidate?view=applications";
+            return "redirect:/candidate/applications";
         }
         saveDocument(app.getId(), "PASSPORT", passport);
         saveDocument(app.getId(), "DIPLOMA", diploma);
@@ -316,6 +320,25 @@ public class CandidateController {
                 .distinct()
                 .sorted(String.CASE_INSENSITIVE_ORDER)
                 .toList();
+    }
+
+    private String resolveView(String requestUri, String legacyView) {
+        for (String candidateView : VIEWS) {
+            if (!candidateView.equals("dashboard") && requestUri.endsWith("/" + candidateView)) {
+                return candidateView;
+            }
+        }
+        return VIEWS.contains(legacyView) ? legacyView : "dashboard";
+    }
+
+    private String candidatePageTitleKey(String view) {
+        return switch (view) {
+            case "vacancies" -> "candidate.vacancies.heading";
+            case "applications" -> "candidate.applications.heading";
+            case "documents" -> "candidate.documents.heading";
+            case "settings" -> "settings.heading";
+            default -> "candidate.dashboard.heading";
+        };
     }
 
     private boolean contains(String value, String query) {

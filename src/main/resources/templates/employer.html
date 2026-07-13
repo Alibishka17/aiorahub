@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="#{employer.title}">AIOraHub - Employer account</title>
+    <title th:text="${pageTitle + ' — AIOraHub'}">AIOraHub - Employer account</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -19,14 +19,14 @@
     <aside class="app-sidebar">
         <nav th:attr="aria-label=#{employer.nav}">
             <a href="/employer" th:classappend="${view == 'dashboard'} ? 'active'" th:text="#{nav.dashboard}">Dashboard</a>
-            <a href="/employer?view=vacancies" th:classappend="${view == 'vacancies'} ? 'active'" th:text="#{nav.vacancies}">Vacancies</a>
-            <a href="/employer?view=candidates" th:classappend="${view == 'candidates'} ? 'active'" th:text="#{employer.candidates}">Candidates</a>
-            <a href="/employer?view=settings" th:classappend="${view == 'settings'} ? 'active'" th:text="#{nav.settings}">Settings</a>
+            <a href="/employer/vacancies" th:classappend="${view == 'vacancies'} ? 'active'" th:text="#{nav.vacancies}">Vacancies</a>
+            <a href="/employer/candidates" th:classappend="${view == 'candidates'} ? 'active'" th:text="#{employer.candidates}">Candidates</a>
+            <a href="/employer/settings" th:classappend="${view == 'settings'} ? 'active'" th:text="#{nav.settings}">Settings</a>
         </nav>
     </aside>
     <main class="app-main">
         <th:block th:if="${view == 'dashboard'}">
-            <div class="app-heading"><div><h1 th:text="#{employer.dashboard.heading}">Recruiter dashboard</h1><p th:text="#{employer.dashboard.copy}">Hiring activity at a glance.</p></div><a href="/employer?view=vacancies&amp;create=true#new-vacancy" class="button button--primary" th:text="#{employer.create_vacancy}">Create vacancy</a></div>
+            <div class="app-heading"><div><h1 th:text="#{employer.dashboard.heading}">Recruiter dashboard</h1><p th:text="#{employer.dashboard.copy}">Hiring activity at a glance.</p></div><a href="/employer/vacancies?create=true#new-vacancy" class="button button--primary" th:text="#{employer.create_vacancy}">Create vacancy</a></div>
             <div class="workspace-kpis">
                 <article><span th:text="#{employer.stats.published}">Published vacancies</span><strong th:text="${publishedVacancies}">0</strong></article>
                 <article><span th:text="#{employer.stats.vacancies}">All vacancies</span><strong th:text="${vacancies.size()}">0</strong></article>
@@ -38,14 +38,14 @@
                 <div class="metric-row"><div><span th:text="#{employer.activity.applications}">Applications</span><strong th:text="${responses.size()}">0</strong></div><div class="metric-track"><span class="metric-fill metric-fill--applications" th:style="'width:' + ${applicationsPercent} + '%'"></span></div></div>
                 <div class="metric-row"><div><span th:text="#{employer.activity.interviews}">Completed interviews</span><strong th:text="${completedInterviews}">0</strong></div><div class="metric-track"><span class="metric-fill metric-fill--interviews" th:style="'width:' + ${interviewsPercent} + '%'"></span></div></div>
             </div></section>
-            <section class="app-panel workspace-section"><div class="app-panel__header"><h2 th:text="#{employer.recent_candidates}">Recent candidates</h2><a href="/employer?view=candidates" class="inline-link" th:text="#{employer.view_all}">View all</a></div><div class="record-list">
+            <section class="app-panel workspace-section"><div class="app-panel__header"><h2 th:text="#{employer.recent_candidates}">Recent candidates</h2><a href="/employer/candidates" class="inline-link" th:text="#{employer.view_all}">View all</a></div><div class="record-list">
                 <p th:if="${recentResponses.isEmpty()}" class="record" th:text="#{employer.no_responses}">No candidates.</p>
                 <article th:each="r : ${recentResponses}" class="record record--compact"><div class="record__head"><div><h3 th:text="${r.displayName}">Candidate</h3><p th:text="${r.vacancy != null ? r.vacancy.title : ''}">Vacancy</p></div><span class="status" th:text="#{${'status.' + #strings.toLowerCase(r.app.status.name())}}">Status</span></div></article>
             </div></section>
         </th:block>
 
         <th:block th:if="${view == 'vacancies'}">
-            <div class="app-heading"><div><h1 th:text="#{employer.vacancies.heading}">Vacancies</h1><p th:text="#{employer.vacancies.copy}">Create and manage vacancies.</p></div><a th:if="${!showCreateForm}" href="/employer?view=vacancies&amp;create=true#new-vacancy" class="button button--primary" th:text="#{employer.create_vacancy}">Create vacancy</a><a th:if="${showCreateForm}" href="/employer?view=vacancies" class="button button--secondary" th:text="#{employer.create_cancel}">Cancel</a></div>
+            <div class="app-heading"><div><h1 th:text="#{employer.vacancies.heading}">Vacancies</h1><p th:text="#{employer.vacancies.copy}">Create and manage vacancies.</p></div><a th:if="${!showCreateForm}" href="/employer/vacancies?create=true#new-vacancy" class="button button--primary" th:text="#{employer.create_vacancy}">Create vacancy</a><a th:if="${showCreateForm}" href="/employer/vacancies" class="button button--secondary" th:text="#{employer.create_cancel}">Cancel</a></div>
             <section th:if="${showCreateForm}" class="app-panel vacancy-create-panel" id="new-vacancy"><div class="app-panel__header"><h2 th:text="#{employer.new_vacancy}">New vacancy</h2></div><div class="app-panel__body">
                     <form th:action="@{/employer/vacancies}" method="post" class="app-form">
                         <div><label class="app-label" for="title" th:text="#{employer.title_label}">Title</label><input id="title" name="title" required maxlength="255" th:placeholder="#{employer.title_placeholder}" class="app-input"></div>
@@ -60,7 +60,7 @@
                     </form>
                 </div></section>
             <section class="app-panel employer-vacancy-list"><div class="app-panel__header"><h2 th:text="#{employer.my_vacancies}">My vacancies</h2><span class="status" th:text="#{employer.positions(${vacancies.size()})}">0</span></div><div class="record-list">
-                <div th:if="${vacancies.isEmpty()}" class="vacancy-empty"><h3 th:text="#{employer.no_vacancies}">No vacancies.</h3><p th:text="#{employer.no_vacancies_copy}">Create the first vacancy to start receiving candidates.</p><a href="/employer?view=vacancies&amp;create=true#new-vacancy" class="button button--primary" th:text="#{employer.create_vacancy}">Create vacancy</a></div>
+                <div th:if="${vacancies.isEmpty()}" class="vacancy-empty"><h3 th:text="#{employer.no_vacancies}">No vacancies.</h3><p th:text="#{employer.no_vacancies_copy}">Create the first vacancy to start receiving candidates.</p><a href="/employer/vacancies?create=true#new-vacancy" class="button button--primary" th:text="#{employer.create_vacancy}">Create vacancy</a></div>
                 <article th:each="v : ${vacancies}" class="record employer-vacancy-record" th:classappend="${v.status.name() == 'PUBLISHED'} ? ' employer-vacancy-record--published'">
                     <div class="record__head"><div><div class="vacancy-tags"><span th:if="${v.category != null}" th:text="${v.category}">Category</span><span th:if="${v.city != null || v.country != null}" th:text="${(v.city != null ? v.city : '') + (v.city != null && v.country != null ? ', ' : '') + (v.country != null ? v.country : '')}">Location</span></div><h3 th:text="${v.title}">Vacancy</h3></div><span class="status" th:text="${v.status.name() == 'PUBLISHED' ? #messages.msg('status.published') : #messages.msg('status.hidden')}">Published</span></div>
                     <p th:text="${v.description}">Description</p><p th:if="${v.salaryMin != null || v.salaryMax != null}" class="salary" th:text="${(v.salaryMin != null ? v.salaryMin : 0) + (v.salaryMax != null ? ' - ' + v.salaryMax : '+') + ' ' + (v.salaryCurrency != null ? v.salaryCurrency : '')}">Salary</p>

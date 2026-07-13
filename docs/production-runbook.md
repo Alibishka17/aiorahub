@@ -15,6 +15,10 @@
 
 Flyway owns the application schema. Spring Session initializes its standard JDBC tables and keeps authenticated sessions in PostgreSQL for 24 hours. Hibernate validates application entities at startup and must not use `create` or `create-drop` in production. Application startup never seeds users, vacancies, applications, or interview results.
 
+## Account routes
+
+Candidate and recruiter workspaces use real page routes rather than hash navigation or a client-side slider. Candidate pages are `/candidate`, `/candidate/vacancies`, `/candidate/applications`, `/candidate/documents`, and `/candidate/settings`. Recruiter pages are `/employer`, `/employer/vacancies`, `/employer/candidates`, and `/employer/settings`. Legacy `?view=` links remain accepted for backward compatibility, but new UI links and form redirects must use the page routes.
+
 ## DNS
 
 Required Cloudflare records:

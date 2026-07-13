@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="#{candidate.title}">AIOraHub - Candidate account</title>
+    <title th:text="${pageTitle + ' — AIOraHub'}">AIOraHub - Candidate account</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -19,15 +19,15 @@
     <aside class="app-sidebar">
         <nav th:attr="aria-label=#{candidate.nav}">
             <a href="/candidate" th:classappend="${view == 'dashboard'} ? 'active'" th:text="#{nav.dashboard}">Dashboard</a>
-            <a href="/candidate?view=vacancies" th:classappend="${view == 'vacancies'} ? 'active'" th:text="#{nav.vacancies}">Vacancies</a>
-            <a href="/candidate?view=applications" th:classappend="${view == 'applications'} ? 'active'" th:text="#{candidate.applications}">My applications</a>
-            <a href="/candidate?view=documents" th:classappend="${view == 'documents'} ? 'active'" th:text="#{nav.documents}">Documents</a>
-            <a href="/candidate?view=settings" th:classappend="${view == 'settings'} ? 'active'" th:text="#{nav.settings}">Settings</a>
+            <a href="/candidate/vacancies" th:classappend="${view == 'vacancies'} ? 'active'" th:text="#{nav.vacancies}">Vacancies</a>
+            <a href="/candidate/applications" th:classappend="${view == 'applications'} ? 'active'" th:text="#{candidate.applications}">My applications</a>
+            <a href="/candidate/documents" th:classappend="${view == 'documents'} ? 'active'" th:text="#{nav.documents}">Documents</a>
+            <a href="/candidate/settings" th:classappend="${view == 'settings'} ? 'active'" th:text="#{nav.settings}">Settings</a>
         </nav>
     </aside>
     <main class="app-main">
         <th:block th:if="${view == 'dashboard'}">
-            <div class="app-heading"><div><h1 th:text="#{candidate.dashboard.heading}">Dashboard</h1><p th:text="#{candidate.dashboard.copy}">Your application activity.</p></div><a href="/candidate?view=vacancies" class="button button--primary" th:text="#{candidate.find_vacancies}">Find vacancies</a></div>
+            <div class="app-heading"><div><h1 th:text="#{candidate.dashboard.heading}">Dashboard</h1><p th:text="#{candidate.dashboard.copy}">Your application activity.</p></div><a href="/candidate/vacancies" class="button button--primary" th:text="#{candidate.find_vacancies}">Find vacancies</a></div>
             <div class="workspace-kpis">
                 <article><span th:text="#{candidate.stats.applications}">Applications</span><strong th:text="${applications.size()}">0</strong></article>
                 <article><span th:text="#{candidate.stats.active}">Active</span><strong th:text="${activeApplications}">0</strong></article>
@@ -35,7 +35,7 @@
                 <article><span th:text="#{candidate.stats.cv}">CV</span><strong class="kpi-word" th:text="${user.cvStorageKey != null ? #messages.msg('candidate.cv.ready') : #messages.msg('candidate.cv.missing')}">Missing</strong></article>
             </div>
             <section class="app-panel workspace-section">
-                <div class="app-panel__header"><h2 th:text="#{candidate.recent_applications}">Recent applications</h2><a href="/candidate?view=applications" class="inline-link" th:text="#{candidate.view_all}">View all</a></div>
+                <div class="app-panel__header"><h2 th:text="#{candidate.recent_applications}">Recent applications</h2><a href="/candidate/applications" class="inline-link" th:text="#{candidate.view_all}">View all</a></div>
                 <div class="record-list">
                     <p th:if="${recentApplications.isEmpty()}" class="record" th:text="#{candidate.no_applications}">No applications.</p>
                     <article th:each="app : ${recentApplications}" th:with="v=${vacancyById[app.vacancyId]}" class="record record--compact">
@@ -47,15 +47,14 @@
 
         <th:block th:if="${view == 'vacancies'}">
             <div class="app-heading"><div><h1 th:text="#{candidate.vacancies.heading}">Vacancies</h1><p th:text="#{candidate.vacancies.copy}">Search and filter open roles.</p></div></div>
-            <form action="/candidate" method="get" class="vacancy-filters">
-                <input type="hidden" name="view" value="vacancies">
+            <form action="/candidate/vacancies" method="get" class="vacancy-filters">
                 <div class="filter-search"><label class="app-label" for="query" th:text="#{vacancy.search}">Search</label><input id="query" name="query" class="app-input" th:value="${filterQuery}" th:placeholder="#{vacancy.search_placeholder}"></div>
                 <div><label class="app-label" for="category" th:text="#{vacancy.category}">Category</label><select id="category" name="category" class="app-input"><option value="" th:text="#{vacancy.all_categories}">All</option><option th:each="item : ${categories}" th:value="${item}" th:text="${item}" th:selected="${item == filterCategory}">Category</option></select></div>
                 <div><label class="app-label" for="country" th:text="#{vacancy.country}">Country</label><select id="country" name="country" class="app-input"><option value="" th:text="#{vacancy.all_countries}">All</option><option th:each="item : ${countries}" th:value="${item}" th:text="${item}" th:selected="${item == filterCountry}">Country</option></select></div>
                 <div><label class="app-label" for="city" th:text="#{vacancy.city}">City</label><select id="city" name="city" class="app-input"><option value="" th:text="#{vacancy.all_cities}">All</option><option th:each="item : ${cities}" th:value="${item}" th:text="${item}" th:selected="${item == filterCity}">City</option></select></div>
                 <div><label class="app-label" for="salary" th:text="#{vacancy.salary_from}">Salary from</label><input id="salary" name="salary" type="number" min="0" class="app-input" th:value="${filterSalary}"></div>
                 <button type="submit" class="button button--dark" th:text="#{vacancy.filter}">Filter</button>
-                <a href="/candidate?view=vacancies" class="button button--secondary" th:text="#{vacancy.reset}">Reset</a>
+                <a href="/candidate/vacancies" class="button button--secondary" th:text="#{vacancy.reset}">Reset</a>
             </form>
             <div class="list-summary" th:text="#{vacancy.results(${vacancies.size()})}">0 vacancies</div>
             <p th:if="${vacancies.isEmpty()}" class="app-card" th:text="#{candidate.no_vacancies}">No vacancies.</p>
