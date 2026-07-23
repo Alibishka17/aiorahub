@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en" th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle + ' — AIOraHub'}">AI interview — AIOraHub</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/aiorahub.css">
+</head>
+<body class="aiora-app">
+<header class="app-topbar">
+    <a href="/" class="brand" th:attr="aria-label=#{brand.home}"><span class="brand-name"><span class="brand-ai">AI</span><span>Ora</span><span class="brand-hub">Hub</span></span></a>
+    <div th:replace="~{fragments/language-switcher :: switcher}"></div>
+    <div class="app-user" th:if="${adminEditing == null || !adminEditing}"><span th:text="${user.name}">Employer</span><form th:action="@{/logout}" method="post"><button type="submit" th:text="#{nav.logout}">Sign out</button></form></div>
+    <div class="app-user" th:if="${adminEditing != null && adminEditing}"><span>Admin</span><form th:action="@{/admin/logout}" method="post"><button type="submit" th:text="#{nav.logout}">Sign out</button></form></div>
+</header>
+<main class="app-main interview-settings-page">
+    <div class="app-heading">
+        <div><h1 th:text="#{interview.edit_heading}">AI interview settings</h1><p th:text="${vacancy.title}">Vacancy</p></div>
+        <a th:href="${adminEditing != null && adminEditing ? '/admin#vacancies' : '/employer/vacancies'}" class="button button--secondary" th:text="#{nav.back_vacancies}">Back</a>
+    </div>
+    <p th:if="${vacancyError != null}" class="form-alert" th:text="${vacancyError}">Error</p>
+    <form th:action="${adminEditing != null && adminEditing ? '/admin/vacancies/' + vacancy.id + '/interview-settings' : '/employer/vacancies/' + vacancy.id + '/interview-settings'}" method="post" class="app-form">
+        <div th:replace="~{fragments/interview-configuration :: configuration}"></div>
+        <button type="submit" class="button button--primary" th:text="#{admin.save}">Save changes</button>
+    </form>
+</main>
+</body>
+</html>

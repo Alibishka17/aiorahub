@@ -3,6 +3,7 @@ package com.truehire.controller;
 import com.truehire.model.*;
 import com.truehire.repository.*;
 import com.truehire.service.AdminAuthenticationService;
+import com.truehire.service.InterviewConfigurationService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
@@ -27,19 +28,22 @@ public class AdminController {
     private final JobVacancyRepository vacancyRepository;
     private final JobApplicationRepository applicationRepository;
     private final MessageSource messages;
+    private final InterviewConfigurationService interviewConfigurationService;
 
     public AdminController(AdminAuthenticationService authentication,
                            SiteVisitRepository visitRepository,
                            UserRepository userRepository,
                            JobVacancyRepository vacancyRepository,
                            JobApplicationRepository applicationRepository,
-                           MessageSource messages) {
+                           MessageSource messages,
+                           InterviewConfigurationService interviewConfigurationService) {
         this.authentication = authentication;
         this.visitRepository = visitRepository;
         this.userRepository = userRepository;
         this.vacancyRepository = vacancyRepository;
         this.applicationRepository = applicationRepository;
         this.messages = messages;
+        this.interviewConfigurationService = interviewConfigurationService;
     }
 
     @GetMapping("/login")
@@ -93,6 +97,7 @@ public class AdminController {
         model.addAttribute("employerUsers", userRepository.findByRole(Role.EMPLOYER));
         model.addAttribute("recentVisits", visitRepository.findTop30ByOrderByVisitedAtDesc());
         model.addAttribute("popularPaths", visitRepository.popularPathsSince(month));
+        model.addAttribute("interviewCriteria", interviewConfigurationService.criterionOptions());
         return "admin";
     }
 
@@ -110,8 +115,10 @@ public class AdminController {
                                 @RequestParam(defaultValue = "EUR") String salaryCurrency,
                                 @RequestParam(defaultValue = "") String requiredDocuments,
                                 @RequestParam(defaultValue = "") String additionalInfo,
-                                @RequestParam(defaultValue = "hrme-warsaw") String interviewTemplateId,
-                                HttpSession session) {
+                                HttpServletRequest request,
+                                HttpSession session,
+                                Locale locale,
+                                org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes) {
         if (!isAdmin(session)) return "redirect:/admin/login";
         if (userRepository.findById(employerId).filter(user -> user.getRole() == Role.EMPLOYER).isEmpty()) {
             return "redirect:/admin#vacancies";
@@ -120,7 +127,13 @@ public class AdminController {
                 candidateRequirements.trim(), employerId);
         setVacancyFields(vacancy, category, city, country, salaryMin, salaryMax, salaryCurrency,
                 requiredDocuments, additionalInfo);
-        vacancy.setInterviewTemplateId(templateId(interviewTemplateId));
+        try {
+            interviewConfigurationService.apply(vacancy, request.getParameterMap());
+        } catch (IllegalArgumentException error) {
+            redirectAttributes.addFlashAttribute("vacancyError",
+                    messages.getMessage(error.getMessage(), null, locale));
+            return "redirect:/admin#vacancies";
+        }
         vacancyRepository.save(vacancy);
         return "redirect:/admin#vacancies";
     }
@@ -139,31 +152,75 @@ public class AdminController {
                                 @RequestParam(defaultValue = "EUR") String salaryCurrency,
                                 @RequestParam(defaultValue = "") String requiredDocuments,
                                 @RequestParam(defaultValue = "") String additionalInfo,
-                                @RequestParam String interviewTemplateId,
                                 @RequestParam VacancyStatus status,
-                                HttpSession session) {
+                                HttpServletRequest request,
+                                HttpSession session,
+                                Locale locale,
+                                org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes) {
         if (!isAdmin(session)) return "redirect:/admin/login";
-        vacancyRepository.findById(id).ifPresent(vacancy -> {
+        JobVacancy vacancy = vacancyRepository.findById(id).orElse(null);
+        if (vacancy != null) {
             vacancy.setTitle(title.trim());
             vacancy.setDescription(description.trim());
             vacancy.setConditions(conditions.trim());
             vacancy.setCandidateRequirements(candidateRequirements.trim());
             setVacancyFields(vacancy, category, city, country, salaryMin, salaryMax, salaryCurrency,
                     requiredDocuments, additionalInfo);
-            vacancy.setInterviewTemplateId(templateId(interviewTemplateId));
+            if (request.getParameter("interviewMode") != null) {
+                try {
+                    interviewConfigurationService.apply(vacancy, request.getParameterMap());
+                } catch (IllegalArgumentException error) {
+                    redirectAttributes.addFlashAttribute("vacancyError",
+                            messages.getMessage(error.getMessage(), null, locale));
+                    return "redirect:/admin#vacancies";
+                }
+            }
             vacancy.setStatus(status);
             vacancyRepository.save(vacancy);
-        });
+        }
         return "redirect:/admin#vacancies";
+    }
+
+    @GetMapping("/vacancies/{id}/interview-settings")
+    public String interviewSettings(@PathVariable Long id, HttpSession session, Model model) {
+        if (!isAdmin(session)) return "redirect:/admin/login";
+        JobVacancy vacancy = vacancyRepository.findById(id).orElse(null);
+        if (vacancy == null || !vacancy.hasCustomInterviewConfiguration()) {
+            return "redirect:/admin#vacancies";
+        }
+        model.addAttribute("vacancy", vacancy);
+        model.addAttribute("editingVacancy", vacancy);
+        model.addAttribute("interviewCriteria", interviewConfigurationService.criterionOptions());
+        model.addAttribute("pageTitle", vacancy.getTitle());
+        model.addAttribute("adminEditing", true);
+        return "vacancy-interview-edit";
+    }
+
+    @PostMapping("/vacancies/{id}/interview-settings")
+    public String updateInterviewSettings(@PathVariable Long id,
+                                          HttpServletRequest request,
+                                          HttpSession session,
+                                          Locale locale,
+                                          org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes) {
+        if (!isAdmin(session)) return "redirect:/admin/login";
+        JobVacancy vacancy = vacancyRepository.findById(id).orElse(null);
+        if (vacancy == null || !vacancy.hasCustomInterviewConfiguration()) {
+            return "redirect:/admin#vacancies";
+        }
+        try {
+            interviewConfigurationService.apply(vacancy, request.getParameterMap());
+            vacancyRepository.save(vacancy);
+            redirectAttributes.addFlashAttribute("vacancyNotice",
+                    messages.getMessage("interview.saved", null, locale));
+        } catch (IllegalArgumentException error) {
+            redirectAttributes.addFlashAttribute("vacancyError",
+                    messages.getMessage(error.getMessage(), null, locale));
+        }
+        return "redirect:/admin/vacancies/" + id + "/interview-settings";
     }
 
     private boolean isAdmin(HttpSession session) {
         return Boolean.TRUE.equals(session.getAttribute(ADMIN_SESSION));
-    }
-
-    private String templateId(String value) {
-        String normalized = value == null ? "" : value.trim();
-        return normalized.matches("[a-z0-9-]{1,100}") ? normalized : "hrme-warsaw";
     }
 
     private void setVacancyFields(JobVacancy vacancy, String category, String city, String country,

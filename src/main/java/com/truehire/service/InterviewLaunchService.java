@@ -26,7 +26,8 @@ public class InterviewLaunchService {
             return application.getExternalInterviewUrl();
         }
         HrmeInterviewClient.InterviewSession session = hrmeClient.createInterview(
-                application.getId(), vacancy.getId(), candidateEmail, vacancy.getInterviewTemplateId());
+                application.getId(), vacancy.getId(), candidateEmail, vacancy.getInterviewTemplateId(),
+                application.getInterviewConfigSnapshot(), application.getSummaryLanguage());
         application.setExternalInterviewId(session.interviewId());
         application.setExternalInterviewToken(session.accessToken());
         application.setExternalInterviewUrl(session.interviewUrl());

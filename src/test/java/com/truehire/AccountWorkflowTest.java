@@ -182,7 +182,13 @@ class AccountWorkflowTest {
                         .param("salaryMax", "24000")
                         .param("salaryCurrency", "AED")
                         .param("requiredDocuments", "Work permit and degree")
-                        .param("additionalInfo", "Relocation package"))
+                        .param("additionalInfo", "Relocation package")
+                        .param("interviewMode", "builder")
+                        .param("interviewLanguage", "en")
+                        .param("interviewQuestions", "Tell me about your QA experience.")
+                        .param("criteria", "relevant_experience")
+                        .param("criterionLevel_relevant_experience", "advanced")
+                        .param("allowFollowUpQuestions", "true"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/employer/vacancies"));
 
@@ -199,6 +205,8 @@ class AccountWorkflowTest {
         assertThat(vacancy.getSalaryCurrency()).isEqualTo("AED");
         assertThat(vacancy.getRequiredDocuments()).isEqualTo("Work permit and degree");
         assertThat(vacancy.getAdditionalInfo()).isEqualTo("Relocation package");
+        assertThat(vacancy.hasCustomInterviewConfiguration()).isTrue();
+        assertThat(vacancy.getInterviewLanguage()).isEqualTo("en");
 
         mockMvc.perform(get("/employer/vacancies").session(employerSession))
                 .andExpect(status().isOk())

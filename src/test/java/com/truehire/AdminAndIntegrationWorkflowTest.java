@@ -68,12 +68,16 @@ class AdminAndIntegrationWorkflowTest {
                         .param("description", "Production welding")
                         .param("conditions", "Relocation to Poland")
                         .param("candidateRequirements", "One year of experience")
-                        .param("interviewTemplateId", "hrme-warsaw"))
+                        .param("interviewMode", "builder")
+                        .param("interviewLanguage", "en")
+                        .param("interviewQuestions", "Describe your welding experience.")
+                        .param("criteria", "professional_knowledge")
+                        .param("criterionLevel_professional_knowledge", "advanced"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/admin#vacancies"));
 
         JobVacancy vacancy = vacancyRepository.findByEmployerId(employer.getId()).get(0);
-        assertThat(vacancy.getInterviewTemplateId()).isEqualTo("hrme-warsaw");
+        assertThat(vacancy.hasCustomInterviewConfiguration()).isTrue();
         mockMvc.perform(get("/admin").session(session))
                 .andExpect(status().isOk())
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Welder in Poland")));
@@ -89,7 +93,7 @@ class AdminAndIntegrationWorkflowTest {
                 "Welder in Poland", "Welding", "Relocation", "Experience", employer.getId()));
         JobApplication application = applicationRepository.save(new JobApplication(
                 vacancy.getId(), candidate.getId(), ApplicationStatus.APPLIED));
-        when(hrmeClient.createInterview(anyLong(), anyLong(), any(), any()))
+        when(hrmeClient.createInterview(anyLong(), anyLong(), any(), any(), any(), any()))
                 .thenReturn(new HrmeInterviewClient.InterviewSession(
                         901L, "access-token", "https://hrme.ai/interview/access-token"));
         MockHttpSession candidateSession = new MockHttpSession();
@@ -134,7 +138,7 @@ class AdminAndIntegrationWorkflowTest {
                 "Welder in Poland", "Welding", "Relocation", "Experience", employer.getId()));
         JobApplication application = applicationRepository.save(new JobApplication(
                 vacancy.getId(), candidate.getId(), ApplicationStatus.APPLIED));
-        when(hrmeClient.createInterview(anyLong(), anyLong(), any(), any()))
+        when(hrmeClient.createInterview(anyLong(), anyLong(), any(), any(), any(), any()))
                 .thenThrow(new IllegalStateException("HRme unavailable"));
         MockHttpSession candidateSession = new MockHttpSession();
         candidateSession.setAttribute("userId", candidate.getId());

@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.server.ResponseStatusException;
 import com.truehire.service.InterviewLaunchService;
+import com.truehire.service.InterviewConfigurationService;
 
 import java.util.Locale;
 import java.util.UUID;
@@ -35,17 +36,20 @@ public class PublicVacancyController {
     private final UserRepository userRepository;
     private final MessageSource messages;
     private final InterviewLaunchService interviewLaunchService;
+    private final InterviewConfigurationService interviewConfigurationService;
 
     public PublicVacancyController(JobVacancyRepository vacancyRepository,
                                    JobApplicationRepository applicationRepository,
                                    UserRepository userRepository,
                                    MessageSource messages,
-                                   InterviewLaunchService interviewLaunchService) {
+                                   InterviewLaunchService interviewLaunchService,
+                                   InterviewConfigurationService interviewConfigurationService) {
         this.vacancyRepository = vacancyRepository;
         this.applicationRepository = applicationRepository;
         this.userRepository = userRepository;
         this.messages = messages;
         this.interviewLaunchService = interviewLaunchService;
+        this.interviewConfigurationService = interviewConfigurationService;
     }
 
     @GetMapping("/vacancies")
@@ -141,6 +145,7 @@ public class PublicVacancyController {
                 telegramEnabled,
                 whatsappEnabled,
                 token);
+        interviewConfigurationService.snapshot(application, vacancy, locale);
         applicationRepository.save(application);
         try {
             return "redirect:" + interviewLaunchService.launch(application, vacancy, normalizedEmail);

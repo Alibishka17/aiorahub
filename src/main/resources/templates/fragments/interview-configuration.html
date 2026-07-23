@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<section th:fragment="configuration" class="interview-config" data-interview-config
+         th:attr="data-current-mode=${editingVacancy == null ? '' : editingVacancy.interviewMode},
+                  data-current-language=${editingVacancy == null ? '' : editingVacancy.interviewLanguage}">
+    <div class="interview-config__heading">
+        <div>
+            <h3 th:text="#{interview.heading}">AI recruiter</h3>
+            <p th:text="#{interview.copy}">Configure a vacancy-specific five-minute interview.</p>
+        </div>
+        <span class="interview-duration" th:text="#{interview.duration}">Up to 5 minutes</span>
+    </div>
+
+    <div class="form-grid">
+        <div>
+            <label class="app-label label-with-help" for="interviewLanguage">
+                <span th:text="#{interview.language_label}">Interview language</span>
+                <button type="button" class="help-dot" th:attr="aria-label=#{interview.language_help}" th:title="#{interview.language_help}">?</button>
+            </label>
+            <select id="interviewLanguage" name="interviewLanguage" class="app-input" required>
+                <option value="ru" th:text="#{interview.language_ru}">Russian</option>
+                <option value="en" th:text="#{interview.language_en}">English</option>
+            </select>
+        </div>
+        <div>
+            <label class="app-label label-with-help" for="interviewMode">
+                <span th:text="#{interview.mode_label}">Configuration mode</span>
+                <button type="button" class="help-dot" th:attr="aria-label=#{interview.mode_help}" th:title="#{interview.mode_help}">?</button>
+            </label>
+            <select id="interviewMode" name="interviewMode" class="app-input" required data-interview-mode>
+                <option value="builder" th:text="#{interview.mode_builder}">Question builder</option>
+                <option value="full" th:text="#{interview.mode_full}">Questions + full prompt</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="interview-config__block">
+        <div class="interview-config__title">
+            <div><h4 th:text="#{interview.criteria_heading}">Assessment criteria</h4><p th:text="#{interview.criteria_copy}">Select what the AI should evaluate and the required level.</p></div>
+            <button type="button" class="help-dot" th:attr="aria-label=#{interview.criteria_help}" th:title="#{interview.criteria_help}">?</button>
+        </div>
+        <div class="criteria-list">
+            <label th:each="criterion : ${interviewCriteria}" class="criterion-row">
+                <input type="checkbox" name="criteria" th:value="${criterion.key}" data-criterion-checkbox>
+                <span th:text="${#messages.msg('interview.criterion.' + criterion.key)}">Criterion</span>
+                <select th:name="${'criterionLevel_' + criterion.key}" class="app-input criterion-level" data-criterion-level disabled>
+                    <th:block th:if="${criterion.language}">
+                        <option th:each="level : ${ {'A1','A2','B1','B2','C1','C2'} }" th:value="${level}" th:text="${level}"></option>
+                    </th:block>
+                    <th:block th:unless="${criterion.language}">
+                        <option value="basic" th:text="#{interview.level.basic}">Basic</option>
+                        <option value="intermediate" th:text="#{interview.level.intermediate}">Intermediate</option>
+                        <option value="advanced" th:text="#{interview.level.advanced}">Advanced</option>
+                        <option value="expert" th:text="#{interview.level.expert}">Expert</option>
+                    </th:block>
+                </select>
+            </label>
+        </div>
+        <div class="custom-criteria" data-custom-criteria></div>
+        <button type="button" class="button button--secondary button--small" data-add-criterion th:text="#{interview.add_criterion}">Add own criterion</button>
+        <template data-criterion-template>
+            <div class="custom-criterion-row">
+                <div>
+                    <input name="customCriterionNames" class="app-input" maxlength="120" th:placeholder="#{interview.custom_criterion_placeholder}" data-custom-criterion>
+                    <small data-criterion-feedback th:text="#{interview.custom_criterion_hint}">Only conversation-assessable skills.</small>
+                </div>
+                <select name="customCriterionLevels" class="app-input">
+                    <option value="basic" th:text="#{interview.level.basic}">Basic</option>
+                    <option value="intermediate" th:text="#{interview.level.intermediate}">Intermediate</option>
+                    <option value="advanced" th:text="#{interview.level.advanced}">Advanced</option>
+                    <option value="expert" th:text="#{interview.level.expert}">Expert</option>
+                </select>
+                <button type="button" class="text-action text-action--danger" data-remove-criterion th:attr="aria-label=#{interview.remove_criterion}">×</button>
+            </div>
+        </template>
+    </div>
+
+    <div class="interview-config__block">
+        <div class="interview-config__title">
+            <div><h4 th:text="#{interview.questions_heading}">Interview questions</h4><p th:text="#{interview.questions_copy}">Add up to eight numbered questions.</p></div>
+            <button type="button" class="help-dot" th:attr="aria-label=#{interview.questions_help}" th:title="#{interview.questions_help}">?</button>
+        </div>
+        <label class="app-label" for="questionTemplate" th:text="#{interview.template_label}">Suggested template</label>
+        <select id="questionTemplate" class="app-input" data-question-template>
+            <option value="" th:text="#{interview.template_none}">Choose a template</option>
+            <option value="universal" th:text="#{interview.template.universal}">Universal</option>
+            <option value="sales" th:text="#{interview.template.sales}">Sales</option>
+            <option value="support" th:text="#{interview.template.support}">Support</option>
+            <option value="recruiting" th:text="#{interview.template.recruiting}">Recruiting</option>
+            <option value="administrative" th:text="#{interview.template.administrative}">Administrative</option>
+            <option value="technical" th:text="#{interview.template.technical}">Technical / IT</option>
+            <option value="management" th:text="#{interview.template.management}">Management</option>
+        </select>
+        <div class="question-list">
+            <label th:each="number : ${#numbers.sequence(1, 8)}" class="question-row">
+                <span th:text="${number}">1</span>
+                <textarea name="interviewQuestions" rows="2" maxlength="1000" class="app-input"
+                          th:placeholder="#{interview.question_placeholder(${number})}" data-question></textarea>
+            </label>
+        </div>
+    </div>
+
+    <div class="interview-config__block">
+        <div class="interview-config__title">
+            <div><h4 th:text="#{interview.script_heading}">Prompt and script</h4><p th:text="#{interview.script_copy}">Intro and outro are optional; safe defaults are used when empty.</p></div>
+            <button type="button" class="help-dot" th:attr="aria-label=#{interview.prompt_help}" th:title="#{interview.prompt_help}">?</button>
+        </div>
+        <label class="app-label" for="interviewIntro" th:text="#{interview.intro}">Intro</label>
+        <textarea id="interviewIntro" name="interviewIntro" rows="3" maxlength="2000" class="app-input" th:placeholder="#{interview.intro_placeholder}" th:text="${editingVacancy == null ? '' : editingVacancy.interviewIntro}"></textarea>
+        <div data-full-prompt hidden>
+            <label class="app-label" for="interviewCustomPrompt" th:text="#{interview.full_prompt}">Additional full prompt</label>
+            <textarea id="interviewCustomPrompt" name="interviewCustomPrompt" rows="6" maxlength="10000" class="app-input" th:placeholder="#{interview.full_prompt_placeholder}" th:text="${editingVacancy == null ? '' : editingVacancy.interviewCustomPrompt}"></textarea>
+        </div>
+        <label class="app-label" for="interviewOutro" th:text="#{interview.outro}">Outro</label>
+        <textarea id="interviewOutro" name="interviewOutro" rows="3" maxlength="2000" class="app-input" th:placeholder="#{interview.outro_placeholder}" th:text="${editingVacancy == null ? '' : editingVacancy.interviewOutro}"></textarea>
+    </div>
+
+    <fieldset class="interview-freedoms">
+        <legend class="app-label label-with-help"><span th:text="#{interview.freedom_heading}">Avatar freedom</span><button type="button" class="help-dot" th:attr="aria-label=#{interview.freedom_help}" th:title="#{interview.freedom_help}">?</button></legend>
+        <label><input type="checkbox" name="allowFollowUpQuestions" th:checked="${editingVacancy != null && editingVacancy.allowFollowUpQuestions}"><span th:text="#{interview.freedom.follow_up}">Ask follow-up questions</span></label>
+        <label><input type="checkbox" name="allowQuestionRephrasing" th:checked="${editingVacancy != null && editingVacancy.allowQuestionRephrasing}"><span th:text="#{interview.freedom.rephrase}">Rephrase questions</span></label>
+        <label><input type="checkbox" name="allowQuestionReordering" th:checked="${editingVacancy != null && editingVacancy.allowQuestionReordering}"><span th:text="#{interview.freedom.reorder}">Change question order</span></label>
+        <label><input type="checkbox" name="allowQuestionSkipping" th:checked="${editingVacancy != null && editingVacancy.allowQuestionSkipping}"><span th:text="#{interview.freedom.skip}">Skip irrelevant questions</span></label>
+        <label><input type="checkbox" name="allowVacancyQuestions" th:checked="${editingVacancy != null && editingVacancy.allowVacancyQuestions}"><span th:text="#{interview.freedom.vacancy}">Answer candidate questions using vacancy information</span></label>
+    </fieldset>
+
+    <textarea th:if="${editingVacancy != null}" hidden data-existing-questions th:text="${editingVacancy.interviewQuestionsJson}">[]</textarea>
+    <textarea th:if="${editingVacancy != null}" hidden data-existing-criteria th:text="${editingVacancy.assessmentCriteriaJson}">[]</textarea>
+    <script>
+        (() => {
+            const root = document.currentScript.closest('[data-interview-config]');
+            if (!root) return;
+            const mode = root.querySelector('[data-interview-mode]');
+            const language = root.querySelector('[name="interviewLanguage"]');
+            if (root.dataset.currentMode) mode.value = root.dataset.currentMode;
+            if (root.dataset.currentLanguage) language.value = root.dataset.currentLanguage;
+            const fullPrompt = root.querySelector('[data-full-prompt]');
+            const promptInput = fullPrompt.querySelector('textarea');
+            const syncMode = () => {
+                const enabled = mode.value === 'full';
+                fullPrompt.hidden = !enabled;
+                promptInput.required = enabled;
+            };
+            mode.addEventListener('change', syncMode);
+            syncMode();
+
+            root.querySelectorAll('[data-criterion-checkbox]').forEach(checkbox => {
+                const select = checkbox.closest('.criterion-row').querySelector('[data-criterion-level]');
+                const sync = () => { select.disabled = !checkbox.checked; select.required = checkbox.checked; };
+                checkbox.addEventListener('change', sync);
+                sync();
+            });
+
+            const customList = root.querySelector('[data-custom-criteria]');
+            const template = root.querySelector('[data-criterion-template]');
+            const addCustomCriterion = (label = '', level = 'intermediate') => {
+                if (customList.children.length >= 5) return;
+                const fragment = template.content.cloneNode(true);
+                fragment.querySelector('[name="customCriterionNames"]').value = label;
+                fragment.querySelector('[name="customCriterionLevels"]').value = level;
+                customList.append(fragment);
+            };
+            root.querySelector('[data-add-criterion]').addEventListener('click', () => {
+                addCustomCriterion();
+            });
+            customList.addEventListener('click', event => {
+                if (event.target.matches('[data-remove-criterion]')) event.target.closest('.custom-criterion-row').remove();
+            });
+            customList.addEventListener('input', event => {
+                if (!event.target.matches('[data-custom-criterion]')) return;
+                const invalid = /(возраст|пол|раса|религи|здоров|инвалид|внешност|семейн|age|gender|race|religion|health|disab|appearance|marital)/i.test(event.target.value);
+                const feedback = event.target.parentElement.querySelector('[data-criterion-feedback]');
+                event.target.setCustomValidity(invalid ? feedback.textContent : '');
+                feedback.classList.toggle('field-error', invalid);
+            });
+
+            const templates = {
+              ru: {
+                universal: ['Расскажите кратко о вашем опыте, наиболее релевантном этой вакансии.','Почему вас заинтересовала эта роль?','Какими профессиональными навыками вы сможете быть полезны работодателю?','Расскажите о сложной рабочей ситуации и вашем решении.','Как вы организуете работу, когда одновременно есть несколько приоритетов?','Какой результат вашей работы вы считаете наиболее значимым?','Когда вы готовы приступить к работе?','Какие вопросы у вас есть о вакансии?'],
+                sales: ['Расскажите о вашем опыте в продажах.','Как вы выявляете потребности клиента?','Приведите пример успешно закрытой сложной сделки.','Как вы работаете с возражениями?','Какие показатели продаж вы выполняли?','Как ведёте CRM и планируете воронку?','Что мотивирует вас в продажах?','Какие вопросы у вас есть о вакансии?'],
+                support: ['Расскажите о вашем опыте поддержки клиентов.','Как вы действуете с недовольным клиентом?','Как определяете приоритет обращений?','Приведите пример решения нестандартной проблемы.','С какими CRM или helpdesk-системами вы работали?','Как сохраняете качество при большой нагрузке?','Какой формат работы вам подходит?','Какие вопросы у вас есть о вакансии?'],
+                recruiting: ['Расскажите о вашем опыте подбора персонала.','С какими вакансиями вы работали?','Как вы находите и оцениваете кандидатов?','Как проводите первичный скрининг?','Приведите пример сложного закрытия вакансии.','Какие рекрутинговые метрики используете?','Как взаимодействуете с нанимающим менеджером?','Какие вопросы у вас есть о вакансии?'],
+                administrative: ['Расскажите о вашем административном опыте.','Какие задачи и документы вы вели?','Как расставляете приоритеты?','Какими офисными программами владеете?','Приведите пример предотвращённой ошибки.','Как работаете с конфиденциальной информацией?','Как действуете при срочной смене планов?','Какие вопросы у вас есть о вакансии?'],
+                technical: ['Расскажите о вашем наиболее релевантном техническом опыте.','Какие технологии и инструменты вы используете?','Опишите сложную техническую задачу и ваше решение.','Как проверяете качество результата?','Как изучаете новую технологию?','Как взаимодействуете с командой и объясняете технические решения?','Какой проект лучше всего показывает ваш уровень?','Какие вопросы у вас есть о вакансии?'],
+                management: ['Расскажите о вашем управленческом опыте.','Как ставите цели команде?','Как контролируете результат без микроменеджмента?','Приведите пример разрешения конфликта.','Как принимаете решение при недостатке данных?','Какие показатели команды считаете ключевыми?','Как развиваете сотрудников?','Какие вопросы у вас есть о вакансии?']
+              },
+              en: {
+                universal: ['Briefly describe the experience most relevant to this vacancy.','Why are you interested in this role?','Which professional skills would help you succeed in this position?','Describe a difficult work situation and how you resolved it.','How do you organize your work when several priorities compete?','Which professional result are you most proud of?','When could you start?','What questions do you have about the vacancy?'],
+                sales: ['Tell us about your sales experience.','How do you uncover a customer’s needs?','Describe a difficult deal you closed successfully.','How do you handle objections?','Which sales targets have you achieved?','How do you maintain CRM data and manage your pipeline?','What motivates you in sales?','What questions do you have about the vacancy?'],
+                support: ['Tell us about your customer-support experience.','How do you work with an unhappy customer?','How do you prioritize incoming requests?','Describe an unusual problem you solved.','Which CRM or helpdesk systems have you used?','How do you maintain quality during peak workload?','Which working arrangement suits you?','What questions do you have about the vacancy?'],
+                recruiting: ['Tell us about your recruiting experience.','Which kinds of roles have you recruited for?','How do you source and assess candidates?','How do you conduct an initial screening?','Describe a difficult vacancy you filled.','Which recruiting metrics do you use?','How do you work with a hiring manager?','What questions do you have about the vacancy?'],
+                administrative: ['Tell us about your administrative experience.','Which tasks and documents have you managed?','How do you set priorities?','Which office tools do you use confidently?','Describe an error you prevented.','How do you handle confidential information?','How do you respond to an urgent change of plans?','What questions do you have about the vacancy?'],
+                technical: ['Tell us about your most relevant technical experience.','Which technologies and tools do you use?','Describe a difficult technical problem and your solution.','How do you verify the quality of your work?','How do you learn a new technology?','How do you collaborate and explain technical decisions?','Which project best demonstrates your level?','What questions do you have about the vacancy?'],
+                management: ['Tell us about your management experience.','How do you set goals for a team?','How do you monitor outcomes without micromanaging?','Describe a conflict you resolved.','How do you decide when information is incomplete?','Which team metrics matter most to you?','How do you develop team members?','What questions do you have about the vacancy?']
+              }
+            };
+            root.querySelector('[data-question-template]').addEventListener('change', event => {
+                const questions = templates[language.value]?.[event.target.value];
+                if (!questions) return;
+                root.querySelectorAll('[data-question]').forEach((field, index) => { field.value = questions[index] || ''; });
+            });
+
+            const existingQuestions = root.querySelector('[data-existing-questions]');
+            if (existingQuestions) {
+                const questions = JSON.parse(existingQuestions.textContent || '[]');
+                root.querySelectorAll('[data-question]').forEach((field, index) => {
+                    field.value = questions[index] || '';
+                });
+            }
+            const existingCriteria = root.querySelector('[data-existing-criteria]');
+            if (existingCriteria) {
+                JSON.parse(existingCriteria.textContent || '[]').forEach(criterion => {
+                    if (criterion.custom) {
+                        addCustomCriterion(criterion.label, criterion.level);
+                        return;
+                    }
+                    const checkbox = root.querySelector(`[name="criteria"][value="${criterion.key}"]`);
+                    if (!checkbox) return;
+                    checkbox.checked = true;
+                    const select = checkbox.closest('.criterion-row').querySelector('[data-criterion-level]');
+                    select.disabled = false;
+                    select.required = true;
+                    select.value = criterion.level;
+                });
+            }
+        })();
+    </script>
+</section>
+</body>
+</html>

@@ -57,6 +57,7 @@
                 <section class="app-panel">
                     <div class="app-panel__header"><h2 th:text="#{admin.new_vacancy}">New vacancy</h2></div>
                     <div class="app-panel__body">
+                        <p th:if="${vacancyError != null}" class="form-alert" th:text="${vacancyError}">Please complete the AI interview setup.</p>
                         <p th:if="${employerUsers.isEmpty()}" class="form-alert" th:text="#{admin.no_employers}">Create an employer account first.</p>
                         <form th:if="${!employerUsers.isEmpty()}" th:action="@{/admin/vacancies}" method="post" class="app-form">
                             <div><label class="app-label" for="admin-employer" th:text="#{admin.owner}">Employer</label><select id="admin-employer" name="employerId" class="app-input" required><option th:each="employer : ${employerUsers}" th:value="${employer.id}" th:text="${employer.name + ' — ' + employer.email}">Employer</option></select></div>
@@ -68,7 +69,7 @@
                             <div><label class="app-label" for="admin-requirements" th:text="#{vacancy.requirements}">Requirements</label><textarea id="admin-requirements" name="candidateRequirements" class="app-input" rows="3" required maxlength="2000"></textarea></div>
                             <div><label class="app-label" for="admin-documents" th:text="#{vacancy.required_documents}">Required documents</label><textarea id="admin-documents" name="requiredDocuments" class="app-input" rows="3" maxlength="2000"></textarea></div>
                             <div><label class="app-label" for="admin-additional" th:text="#{vacancy.additional_info}">Additional information</label><textarea id="admin-additional" name="additionalInfo" class="app-input" rows="3" maxlength="2000"></textarea></div>
-                            <div><label class="app-label" for="admin-template" th:text="#{admin.template}">HRme template ID</label><input id="admin-template" name="interviewTemplateId" value="hrme-warsaw" class="app-input" required pattern="[a-z0-9-]+"></div>
+                            <div th:replace="~{fragments/interview-configuration :: configuration}"></div>
                             <button class="button button--primary" type="submit" th:text="#{employer.publish_vacancy}">Publish vacancy</button>
                         </form>
                     </div>
@@ -89,7 +90,7 @@
                                 <textarea name="requiredDocuments" class="app-input" rows="2" th:text="${vacancy.requiredDocuments}" th:placeholder="#{vacancy.required_documents}" maxlength="2000"></textarea>
                                 <textarea name="additionalInfo" class="app-input" rows="2" th:text="${vacancy.additionalInfo}" th:placeholder="#{vacancy.additional_info}" maxlength="2000"></textarea>
                                 <div class="admin-form-row"><div><label class="app-label" th:text="#{admin.template}">Template</label><input name="interviewTemplateId" class="app-input" th:value="${vacancy.interviewTemplateId}" required pattern="[a-z0-9-]+"></div><div><label class="app-label" th:text="#{admin.status}">Status</label><select name="status" class="app-input"><option th:each="value : ${T(com.truehire.model.VacancyStatus).values()}" th:value="${value}" th:text="${value}" th:selected="${value == vacancy.status}">PUBLISHED</option></select></div></div>
-                                <button type="submit" class="button button--dark" th:text="#{admin.save}">Save changes</button>
+                                <div class="record-actions"><button type="submit" class="button button--dark" th:text="#{admin.save}">Save changes</button><a th:if="${vacancy.hasCustomInterviewConfiguration()}" th:href="@{'/admin/vacancies/' + ${vacancy.id} + '/interview-settings'}" class="button button--secondary" th:text="#{interview.edit_action}">AI interview</a></div>
                             </form>
                         </article>
                     </div>

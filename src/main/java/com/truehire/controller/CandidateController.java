@@ -5,6 +5,7 @@ import com.truehire.repository.*;
 import com.truehire.service.AccountSettingsService;
 import com.truehire.service.CvStorageService;
 import com.truehire.service.InterviewLaunchService;
+import com.truehire.service.InterviewConfigurationService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.slf4j.Logger;
@@ -40,6 +41,7 @@ public class CandidateController {
     private final CvStorageService cvStorageService;
     private final InterviewLaunchService interviewLaunchService;
     private final AccountSettingsService accountSettingsService;
+    private final InterviewConfigurationService interviewConfigurationService;
     private final MessageSource messages;
 
     public CandidateController(UserRepository userRepository,
@@ -50,6 +52,7 @@ public class CandidateController {
                                CvStorageService cvStorageService,
                                InterviewLaunchService interviewLaunchService,
                                AccountSettingsService accountSettingsService,
+                               InterviewConfigurationService interviewConfigurationService,
                                MessageSource messages) {
         this.userRepository = userRepository;
         this.vacancyRepository = vacancyRepository;
@@ -59,6 +62,7 @@ public class CandidateController {
         this.cvStorageService = cvStorageService;
         this.interviewLaunchService = interviewLaunchService;
         this.accountSettingsService = accountSettingsService;
+        this.interviewConfigurationService = interviewConfigurationService;
         this.messages = messages;
     }
 
@@ -229,8 +233,9 @@ public class CandidateController {
                 .findByVacancyIdAndCandidateId(vacancyId, candidate.getId()).orElse(null);
         if (application == null) {
             if (vacancy.getStatus() != VacancyStatus.PUBLISHED) return "redirect:/candidate/vacancies";
-            application = applicationRepository.save(new JobApplication(
-                    vacancyId, candidate.getId(), ApplicationStatus.APPLIED));
+            application = new JobApplication(vacancyId, candidate.getId(), ApplicationStatus.APPLIED);
+            interviewConfigurationService.snapshot(application, vacancy, locale);
+            application = applicationRepository.save(application);
         }
         try {
             return "redirect:" + interviewLaunchService.launch(application, vacancy, candidate.getEmail());

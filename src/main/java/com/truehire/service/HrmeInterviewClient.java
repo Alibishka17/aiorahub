@@ -12,6 +12,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.Map;
+import java.util.LinkedHashMap;
 
 @Service
 public class HrmeInterviewClient {
@@ -31,16 +32,23 @@ public class HrmeInterviewClient {
     }
 
     public InterviewSession createInterview(Long applicationId, Long vacancyId,
-                                             String candidateEmail, String templateId) {
+                                             String candidateEmail, String templateId,
+                                             String interviewConfiguration, String summaryLanguage) {
         if (serviceToken == null || serviceToken.isBlank()) {
             throw new IllegalStateException("HRme integration is not configured");
         }
         try {
-            String body = objectMapper.writeValueAsString(Map.of(
-                    "application_id", applicationId,
-                    "vacancy_id", vacancyId,
-                    "candidate_email", candidateEmail,
-                    "template_id", templateId));
+            Map<String, Object> payload = new LinkedHashMap<>();
+            payload.put("application_id", applicationId);
+            payload.put("vacancy_id", vacancyId);
+            payload.put("candidate_email", candidateEmail);
+            if (interviewConfiguration == null || interviewConfiguration.isBlank()) {
+                payload.put("template_id", templateId);
+            } else {
+                payload.put("interview_configuration", objectMapper.readTree(interviewConfiguration));
+                payload.put("summary_language", "kk".equals(summaryLanguage) ? "kk" : "ru");
+            }
+            String body = objectMapper.writeValueAsString(payload);
             HttpRequest request = HttpRequest.newBuilder(endpoint)
                     .timeout(Duration.ofSeconds(20))
                     .header("Authorization", "Bearer " + serviceToken)

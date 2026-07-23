@@ -55,7 +55,7 @@ JAR, database and uploads backups must run before a production rebuild. Database
 
 The production environment file must contain `SPRING_PROFILES_ACTIVE=prod`, database credentials, `ADMIN_USERNAME`, a BCrypt-only `ADMIN_PASSWORD_HASH`, `HRME_BASE_URL`, `HRME_SERVICE_TOKEN`, and `UPLOAD_DIR=/var/lib/aiorahub/uploads`; use `deploy/systemd/aiorahub.env.example` as the key list. The same random service token must be installed in HRme as `AIORAHUB_SERVICE_TOKEN`. Never commit plaintext passwords or real tokens.
 
-The service requires outbound HTTPS access to `HRME_BASE_URL` when a candidate starts an interview. Do not add a blanket `IPAddressDeny=any` systemd rule unless the complete and maintainable HRme/DNS allowlist is installed and verified; otherwise the interview form will be unable to create a session. Until vacancy-specific templates are configured, vacancies use the `hrme-warsaw` template (the standard welder-in-Poland interview).
+The service requires outbound HTTPS access to `HRME_BASE_URL` when a candidate starts an interview. Do not add a blanket `IPAddressDeny=any` systemd rule unless the complete and maintainable HRme/DNS allowlist is installed and verified; otherwise the interview form will be unable to create a session. Flyway V6 adds vacancy interview configuration and immutable application snapshots. Existing rows with a null configuration are intentional legacy demo vacancies and continue to use their stored HRme template; all newly created vacancies must pass the configuration validator before publication.
 
 Before the first release with CV uploads:
 

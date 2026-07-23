@@ -34,6 +34,42 @@ public class JobVacancy {
     @Column(nullable = false, length = 100)
     private String interviewTemplateId = "hrme-warsaw";
 
+    @Column(length = 16)
+    private String interviewMode;
+
+    @Column(length = 2)
+    private String interviewLanguage;
+
+    @Column(length = 2000)
+    private String interviewIntro;
+
+    @Column(length = 2000)
+    private String interviewOutro;
+
+    @Column(length = 10000)
+    private String interviewCustomPrompt;
+
+    @Column(length = 12000)
+    private String interviewQuestionsJson;
+
+    @Column(length = 12000)
+    private String assessmentCriteriaJson;
+
+    @Column(nullable = false)
+    private boolean allowFollowUpQuestions;
+
+    @Column(nullable = false)
+    private boolean allowQuestionRephrasing;
+
+    @Column(nullable = false)
+    private boolean allowQuestionReordering;
+
+    @Column(nullable = false)
+    private boolean allowQuestionSkipping;
+
+    @Column(nullable = false)
+    private boolean allowVacancyQuestions;
+
     @Column(length = 120)
     private String category;
 
@@ -99,6 +135,46 @@ public class JobVacancy {
 
     public String getInterviewTemplateId() { return interviewTemplateId; }
     public void setInterviewTemplateId(String interviewTemplateId) { this.interviewTemplateId = interviewTemplateId; }
+
+    public String getInterviewMode() { return interviewMode; }
+    public void setInterviewMode(String interviewMode) { this.interviewMode = interviewMode; }
+
+    public String getInterviewLanguage() { return interviewLanguage; }
+    public void setInterviewLanguage(String interviewLanguage) { this.interviewLanguage = interviewLanguage; }
+
+    public String getInterviewIntro() { return interviewIntro; }
+    public void setInterviewIntro(String interviewIntro) { this.interviewIntro = interviewIntro; }
+
+    public String getInterviewOutro() { return interviewOutro; }
+    public void setInterviewOutro(String interviewOutro) { this.interviewOutro = interviewOutro; }
+
+    public String getInterviewCustomPrompt() { return interviewCustomPrompt; }
+    public void setInterviewCustomPrompt(String interviewCustomPrompt) { this.interviewCustomPrompt = interviewCustomPrompt; }
+
+    public String getInterviewQuestionsJson() { return interviewQuestionsJson; }
+    public void setInterviewQuestionsJson(String interviewQuestionsJson) { this.interviewQuestionsJson = interviewQuestionsJson; }
+
+    public String getAssessmentCriteriaJson() { return assessmentCriteriaJson; }
+    public void setAssessmentCriteriaJson(String assessmentCriteriaJson) { this.assessmentCriteriaJson = assessmentCriteriaJson; }
+
+    public boolean isAllowFollowUpQuestions() { return allowFollowUpQuestions; }
+    public void setAllowFollowUpQuestions(boolean allowFollowUpQuestions) { this.allowFollowUpQuestions = allowFollowUpQuestions; }
+
+    public boolean isAllowQuestionRephrasing() { return allowQuestionRephrasing; }
+    public void setAllowQuestionRephrasing(boolean allowQuestionRephrasing) { this.allowQuestionRephrasing = allowQuestionRephrasing; }
+
+    public boolean isAllowQuestionReordering() { return allowQuestionReordering; }
+    public void setAllowQuestionReordering(boolean allowQuestionReordering) { this.allowQuestionReordering = allowQuestionReordering; }
+
+    public boolean isAllowQuestionSkipping() { return allowQuestionSkipping; }
+    public void setAllowQuestionSkipping(boolean allowQuestionSkipping) { this.allowQuestionSkipping = allowQuestionSkipping; }
+
+    public boolean isAllowVacancyQuestions() { return allowVacancyQuestions; }
+    public void setAllowVacancyQuestions(boolean allowVacancyQuestions) { this.allowVacancyQuestions = allowVacancyQuestions; }
+
+    public boolean hasCustomInterviewConfiguration() {
+        return interviewMode != null && interviewQuestionsJson != null && assessmentCriteriaJson != null;
+    }
 
     public String getCategory() { return category; }
     public void setCategory(String category) { this.category = category; }

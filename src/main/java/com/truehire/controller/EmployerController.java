@@ -4,6 +4,7 @@ import com.truehire.model.*;
 import com.truehire.repository.*;
 import com.truehire.service.AccountSettingsService;
 import com.truehire.service.CvStorageService;
+import com.truehire.service.InterviewConfigurationService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.context.MessageSource;
@@ -36,6 +37,7 @@ public class EmployerController {
     private final InterviewResultRepository resultRepository;
     private final CvStorageService cvStorageService;
     private final AccountSettingsService accountSettingsService;
+    private final InterviewConfigurationService interviewConfigurationService;
     private final MessageSource messages;
 
     public EmployerController(UserRepository userRepository,
@@ -44,6 +46,7 @@ public class EmployerController {
                               InterviewResultRepository resultRepository,
                               CvStorageService cvStorageService,
                               AccountSettingsService accountSettingsService,
+                              InterviewConfigurationService interviewConfigurationService,
                               MessageSource messages) {
         this.userRepository = userRepository;
         this.vacancyRepository = vacancyRepository;
@@ -51,6 +54,7 @@ public class EmployerController {
         this.resultRepository = resultRepository;
         this.cvStorageService = cvStorageService;
         this.accountSettingsService = accountSettingsService;
+        this.interviewConfigurationService = interviewConfigurationService;
         this.messages = messages;
     }
 
@@ -128,6 +132,7 @@ public class EmployerController {
         model.addAttribute("interviewsPercent", completedInterviews * 100 / maxMetric);
         model.addAttribute("countryOptions", countryOptions(locale));
         model.addAttribute("cityOptions", cityOptions(vacancies));
+        model.addAttribute("interviewCriteria", interviewConfigurationService.criterionOptions());
         return "employer";
     }
 
@@ -144,7 +149,10 @@ public class EmployerController {
                                 @RequestParam(defaultValue = "EUR") String salaryCurrency,
                                 @RequestParam(defaultValue = "") String requiredDocuments,
                                 @RequestParam(defaultValue = "") String additionalInfo,
-                                HttpSession session) {
+                                HttpServletRequest request,
+                                HttpSession session,
+                                Locale locale,
+                                RedirectAttributes redirectAttributes) {
         User employer = currentEmployer(session);
         if (employer == null) return "redirect:/login?role=EMPLOYER";
 
@@ -156,6 +164,13 @@ public class EmployerController {
         vacancy.setRequiredDocuments(blankToNull(requiredDocuments));
         vacancy.setAdditionalInfo(blankToNull(additionalInfo));
         setSalary(vacancy, salaryMin, salaryMax, salaryCurrency);
+        try {
+            interviewConfigurationService.apply(vacancy, request.getParameterMap());
+        } catch (IllegalArgumentException error) {
+            redirectAttributes.addFlashAttribute("vacancyError",
+                    messages.getMessage(error.getMessage(), null, locale));
+            return "redirect:/employer/vacancies?create=true#new-vacancy";
+        }
         vacancyRepository.save(vacancy);
         return "redirect:/employer/vacancies";
     }
@@ -173,6 +188,53 @@ public class EmployerController {
     @PostMapping("/vacancies/{id}/archive")
     public String archiveVacancy(@PathVariable Long id, HttpSession session) {
         return updateVacancyStatus(id, VacancyStatus.ARCHIVED, session);
+    }
+
+    @GetMapping("/vacancies/{id}/interview-settings")
+    public String editInterviewSettings(@PathVariable Long id,
+                                        HttpSession session,
+                                        Locale locale,
+                                        Model model) {
+        User employer = currentEmployer(session);
+        if (employer == null) return "redirect:/login?role=EMPLOYER";
+        JobVacancy vacancy = vacancyRepository.findById(id)
+                .filter(item -> item.getEmployerId().equals(employer.getId()))
+                .orElse(null);
+        if (vacancy == null || !vacancy.hasCustomInterviewConfiguration()) {
+            return "redirect:/employer/vacancies";
+        }
+        model.addAttribute("user", employer);
+        model.addAttribute("vacancy", vacancy);
+        model.addAttribute("editingVacancy", vacancy);
+        model.addAttribute("interviewCriteria", interviewConfigurationService.criterionOptions());
+        model.addAttribute("pageTitle", messages.getMessage("interview.edit_heading", null, locale));
+        return "vacancy-interview-edit";
+    }
+
+    @PostMapping("/vacancies/{id}/interview-settings")
+    public String updateInterviewSettings(@PathVariable Long id,
+                                          HttpServletRequest request,
+                                          HttpSession session,
+                                          Locale locale,
+                                          RedirectAttributes redirectAttributes) {
+        User employer = currentEmployer(session);
+        if (employer == null) return "redirect:/login?role=EMPLOYER";
+        JobVacancy vacancy = vacancyRepository.findById(id)
+                .filter(item -> item.getEmployerId().equals(employer.getId()))
+                .orElse(null);
+        if (vacancy == null || !vacancy.hasCustomInterviewConfiguration()) {
+            return "redirect:/employer/vacancies";
+        }
+        try {
+            interviewConfigurationService.apply(vacancy, request.getParameterMap());
+            vacancyRepository.save(vacancy);
+            redirectAttributes.addFlashAttribute("interviewSettingsSaved", true);
+            return "redirect:/employer/vacancies";
+        } catch (IllegalArgumentException error) {
+            redirectAttributes.addFlashAttribute("vacancyError",
+                    messages.getMessage(error.getMessage(), null, locale));
+            return "redirect:/employer/vacancies/" + id + "/interview-settings";
+        }
     }
 
     private String updateVacancyStatus(Long id, VacancyStatus status, HttpSession session) {

@@ -54,6 +54,12 @@ public class JobApplication {
 
     private LocalDateTime interviewCompletedAt;
 
+    @Column(length = 30000)
+    private String interviewConfigSnapshot;
+
+    @Column(length = 2)
+    private String summaryLanguage;
+
     public JobApplication() {
     }
 
@@ -149,4 +155,10 @@ public class JobApplication {
 
     public LocalDateTime getInterviewCompletedAt() { return interviewCompletedAt; }
     public void setInterviewCompletedAt(LocalDateTime interviewCompletedAt) { this.interviewCompletedAt = interviewCompletedAt; }
+
+    public String getInterviewConfigSnapshot() { return interviewConfigSnapshot; }
+    public void setInterviewConfigSnapshot(String interviewConfigSnapshot) { this.interviewConfigSnapshot = interviewConfigSnapshot; }
+
+    public String getSummaryLanguage() { return summaryLanguage; }
+    public void setSummaryLanguage(String summaryLanguage) { this.summaryLanguage = summaryLanguage; }
 }
